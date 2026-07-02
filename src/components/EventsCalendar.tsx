@@ -64,10 +64,16 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
   // Fetch events from Firestore
   useEffect(() => {
     const unsubscribe = firebaseService.subscribeEvents((data) => {
-      setEvents(data);
+      const correctedData = data.map(event => {
+        const title = event.title.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH');
+        const description = event.description.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH');
+        const location = event.location.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH');
+        return { ...event, title, description, location };
+      });
+      setEvents(correctedData);
       
       // Auto-bootstrap if empty and admin is viewing, or just trigger initial events
-      if (data.length === 0 && isAdmin) {
+      if (correctedData.length === 0 && isAdmin) {
         const initialEvents: ChurchEvent[] = [
           {
             title: "Sunday Illumination Service",

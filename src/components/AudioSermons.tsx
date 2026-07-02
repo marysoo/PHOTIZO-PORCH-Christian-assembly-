@@ -81,10 +81,15 @@ export default function AudioSermons({ isAdmin }: AudioSermonsProps) {
   // Fetch sermons
   useEffect(() => {
     const unsubscribe = firebaseService.subscribeSermons((data) => {
-      setSermons(data);
+      const correctedData = data.map(sermon => {
+        const title = sermon.title.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH');
+        const description = sermon.description.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH');
+        return { ...sermon, title, description };
+      });
+      setSermons(correctedData);
       
       // Auto-bootstrap sample sermons if empty and admin is viewing
-      if (data.length === 0 && isAdmin) {
+      if (correctedData.length === 0 && isAdmin) {
         const initialSermons: Sermon[] = [
           {
             title: "Establishing Your Prophetic Season",

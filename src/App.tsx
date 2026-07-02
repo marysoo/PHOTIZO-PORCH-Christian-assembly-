@@ -84,7 +84,46 @@ export default function App() {
 
   useEffect(() => {
     const unsub = firebaseService.subscribeSections((data) => {
-      if (data.length === 0 && isAdmin) {
+      // Automatically correct "Porche" to "Porch" in title, subtitle, or content
+      const correctedData = data.map(section => {
+        let changed = false;
+        let title = section.title;
+        let subtitle = section.subtitle || '';
+        let content = section.content || '';
+
+        if (title.includes('Porche')) {
+          title = title.replace(/Porche/g, 'Porch');
+          changed = true;
+        }
+        if (title.includes('PORCHE')) {
+          title = title.replace(/PORCHE/g, 'PORCH');
+          changed = true;
+        }
+        if (subtitle.includes('Porche')) {
+          subtitle = subtitle.replace(/Porche/g, 'Porch');
+          changed = true;
+        }
+        if (subtitle.includes('PORCHE')) {
+          subtitle = subtitle.replace(/PORCHE/g, 'PORCH');
+          changed = true;
+        }
+        if (content.includes('Porche')) {
+          content = content.replace(/Porche/g, 'Porch');
+          changed = true;
+        }
+        if (content.includes('PORCHE')) {
+          content = content.replace(/PORCHE/g, 'PORCH');
+          changed = true;
+        }
+
+        if (changed && isAdmin) {
+          firebaseService.upsertSection({ ...section, title, subtitle, content });
+        }
+
+        return { ...section, title, subtitle, content };
+      });
+
+      if (correctedData.length === 0 && isAdmin) {
         // Initial bootstrap if empty
         const initial: PageSection[] = [
           { 
@@ -99,7 +138,7 @@ export default function App() {
             sectionId: 'about',
             title: 'Our Divine Mandate',
             subtitle: 'Enlightening hearts with the knowledge of God\'s glory.',
-            content: "Photizo Porche Christian Assembly is more than a church; it is a portal of divine illumination. Our name, derived from the Greek 'Photizo,' signifies our sacred mandate to enlighten hearts and manifest kingdom excellence.\n\nUnder the leadership of Prophet Japeth Tsukwas, we are building a global community dedicated to supernatural manifestations and purposeful living.",
+            content: "Photizo Porch Christian Assembly is more than a church; it is a portal of divine illumination. Our name, derived from the Greek 'Photizo,' signifies our sacred mandate to enlighten hearts and manifest kingdom excellence.\n\nUnder the leadership of Prophet Japeth Tsukwas, we are building a global community dedicated to supernatural manifestations and purposeful living.",
             order: 1,
             imageUrl: "https://images.unsplash.com/photo-1444464666168-49d633b86747?q=80&w=2069&auto=format&fit=crop"
           }
@@ -108,8 +147,8 @@ export default function App() {
       }
 
       // Auto-migrate hero title if it contains the old phrase for admin
-      if (isAdmin && data.length > 0) {
-        const heroSec = data.find(s => s.sectionId === 'hero');
+      if (isAdmin && correctedData.length > 0) {
+        const heroSec = correctedData.find(s => s.sectionId === 'hero');
         if (heroSec && (heroSec.title.toLowerCase().includes('illuminating') || heroSec.title === 'New Section')) {
           heroSec.title = "Redefining the destinies of men through His Glorious Light";
           firebaseService.upsertSection(heroSec);
@@ -117,7 +156,7 @@ export default function App() {
       }
 
       // Filter to only allow core sections
-      setSections(data.filter(s => ['hero', 'about'].includes(s.sectionId)).sort((a, b) => (a.order || 0) - (b.order || 0)));
+      setSections(correctedData.filter(s => ['hero', 'about'].includes(s.sectionId)).sort((a, b) => (a.order || 0) - (b.order || 0)));
     });
     return () => unsub();
   }, [isAdmin]);
@@ -310,7 +349,7 @@ export default function App() {
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <span className="text-xl font-bold glow-text tracking-tighter mb-1">{MINISTRY_NAME}</span>
             <p className="text-zinc-600 text-sm">
-              &copy; <span>{new Date().getFullYear()}</span> Photizo Porche. All Rights Reserved.
+              &copy; <span>{new Date().getFullYear()}</span> Photizo Porch. All Rights Reserved.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-8 text-xs text-zinc-500 uppercase tracking-widest font-medium">

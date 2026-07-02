@@ -1,6 +1,8 @@
 {
-  "name": "Photizo Porche Christian Assembly",
-  "description": "Professional platform for PHOTIZO PORCHE CHRISTIAN ASSEMBLY, led by Prophet Japhet Tsukwas and Mrs. Regina Japheth.",
+  "name": "Photizo Porch Christian Assembly",
+  "description": "Professional platform for PHOTIZO PORCH CHRISTIAN ASSEMBLY, led by Prophet Japhet Tsukwas and Mrs. Regina Japheth.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

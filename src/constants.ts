@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export const MINISTRY_NAME = "PHOTIZO PORCHE CHRISTIAN ASSEMBLY";
+export const MINISTRY_NAME = "PHOTIZO PORCH CHRISTIAN ASSEMBLY";
 export const LEADERS = {
   prophet: "Prophet Japhet Tsukwas",
   pastor: "Mrs. Regina Japheth"
@@ -27,14 +27,14 @@ export const GIVING_OPTIONS = [
 export const BANK_DETAILS = {
   local: {
     bankName: "Keystone Bank",
-    accountName: "PHOTIZO PORCHE CHRISTIAN ASSEMBLY",
+    accountName: "PHOTIZO PORCH CHRISTIAN ASSEMBLY",
     accountNumber: "1013244531",
     accountType: "Ministry Account",
     description: "For local tithes, offerings, seeds, and partnership in Nigeria"
   },
   dom: {
     bankName: "KEYSTONE BANK LIMITED",
-    accountName: "PHOTIZO PORCHE CHRISTIAN ASSEMBLY",
+    accountName: "PHOTIZO PORCH CHRISTIAN ASSEMBLY",
     accountNumber: "1014165093",
     iban: "GB90CITI18500812690365",
     swift: "PLNINGLA",
