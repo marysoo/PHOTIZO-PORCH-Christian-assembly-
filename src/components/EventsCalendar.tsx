@@ -80,7 +80,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
           date: "2026-07-23",
           time: "4:00 PM (Morning Session: 8:00 AM)",
           location: "Photizo Dome & Online",
-          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
           imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
         },
         {
@@ -90,7 +90,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
           date: "2026-07-24",
           time: "4:00 PM (Morning Session: 8:00 AM)",
           location: "Photizo Dome & Online",
-          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
           imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
         },
         {
@@ -100,7 +100,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
           date: "2026-07-25",
           time: "4:00 PM (Morning Session: 8:00 AM)",
           location: "Photizo Dome & Online",
-          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
           imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
         },
         {
@@ -110,23 +110,38 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
           date: "2026-07-26",
           time: "4:00 PM (Morning Session: 8:00 AM)",
           location: "Photizo Dome & Online",
-          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
           imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
         }
       ];
 
       const mergedData = [...correctedData];
       contendingEvents.forEach(cEvt => {
-        const alreadyExists = correctedData.some(evt => 
+        const existingIdx = mergedData.findIndex(evt => 
           evt.date === cEvt.date && evt.title.toUpperCase().includes("CONTENDING FOR THE FAITH")
         );
-        if (!alreadyExists) {
+        if (existingIdx === -1) {
           mergedData.push(cEvt);
           
           // Auto-bootstrap it to Firestore if current user is admin
           if (isAdmin) {
             const { id: _, ...dbEvt } = cEvt; // Remove client-side id property
             firebaseService.upsertEvent(dbEvt);
+          }
+        } else {
+          // If it exists, let's check if the description needs to be updated with ministers
+          const existingEvent = mergedData[existingIdx];
+          if (!existingEvent.description.includes("Donatus Ioruse")) {
+            const updatedEvent = {
+              ...existingEvent,
+              description: cEvt.description
+            };
+            mergedData[existingIdx] = updatedEvent;
+            
+            // Auto-update Firestore if current user is admin
+            if (isAdmin) {
+              firebaseService.upsertEvent(updatedEvent);
+            }
           }
         }
       });
@@ -169,7 +184,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
             date: "2026-07-23",
             time: "4:00 PM (Morning Session: 8:00 AM)",
             location: "Photizo Dome & Online",
-            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
             imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
           },
           {
@@ -178,7 +193,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
             date: "2026-07-24",
             time: "4:00 PM (Morning Session: 8:00 AM)",
             location: "Photizo Dome & Online",
-            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
             imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
           },
           {
@@ -187,7 +202,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
             date: "2026-07-25",
             time: "4:00 PM (Morning Session: 8:00 AM)",
             location: "Photizo Dome & Online",
-            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF the NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
             imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
           },
           {
@@ -196,7 +211,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
             date: "2026-07-26",
             time: "4:00 PM (Morning Session: 8:00 AM)",
             location: "Photizo Dome & Online",
-            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
             imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
           },
           {
