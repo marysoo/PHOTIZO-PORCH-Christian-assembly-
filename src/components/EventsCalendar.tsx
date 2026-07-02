@@ -70,7 +70,68 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
         const location = event.location.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH');
         return { ...event, title, description, location };
       });
-      setEvents(correctedData);
+
+      // Ensure the "CONTENDING FOR THE FAITH" events are present
+      const contendingEvents: ChurchEvent[] = [
+        {
+          id: "contending-for-the-faith-d1",
+          title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 1)",
+          category: "Special Event",
+          date: "2026-07-23",
+          time: "4:00 PM (Morning Session: 8:00 AM)",
+          location: "Photizo Dome & Online",
+          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+          imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+        },
+        {
+          id: "contending-for-the-faith-d2",
+          title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 2)",
+          category: "Special Event",
+          date: "2026-07-24",
+          time: "4:00 PM (Morning Session: 8:00 AM)",
+          location: "Photizo Dome & Online",
+          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+          imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+        },
+        {
+          id: "contending-for-the-faith-d3",
+          title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 3)",
+          category: "Special Event",
+          date: "2026-07-25",
+          time: "4:00 PM (Morning Session: 8:00 AM)",
+          location: "Photizo Dome & Online",
+          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+          imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+        },
+        {
+          id: "contending-for-the-faith-d4",
+          title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Grand Finale)",
+          category: "Special Event",
+          date: "2026-07-26",
+          time: "4:00 PM (Morning Session: 8:00 AM)",
+          location: "Photizo Dome & Online",
+          description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+          imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+        }
+      ];
+
+      const mergedData = [...correctedData];
+      contendingEvents.forEach(cEvt => {
+        const alreadyExists = correctedData.some(evt => 
+          evt.date === cEvt.date && evt.title.toUpperCase().includes("CONTENDING FOR THE FAITH")
+        );
+        if (!alreadyExists) {
+          mergedData.push(cEvt);
+          
+          // Auto-bootstrap it to Firestore if current user is admin
+          if (isAdmin) {
+            const { id: _, ...dbEvt } = cEvt; // Remove client-side id property
+            firebaseService.upsertEvent(dbEvt);
+          }
+        }
+      });
+
+      setEvents(mergedData);
       
       // Auto-bootstrap if empty and admin is viewing, or just trigger initial events
       if (correctedData.length === 0 && isAdmin) {
@@ -101,6 +162,42 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
             location: "Photizo Dome",
             description: "A special monthly prophetic gathering with healing ministrations, miracles, and specialized spiritual guidance.",
             imageUrl: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600"
+          },
+          {
+            title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 1)",
+            category: "Special Event",
+            date: "2026-07-23",
+            time: "4:00 PM (Morning Session: 8:00 AM)",
+            location: "Photizo Dome & Online",
+            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+          },
+          {
+            title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 2)",
+            category: "Special Event",
+            date: "2026-07-24",
+            time: "4:00 PM (Morning Session: 8:00 AM)",
+            location: "Photizo Dome & Online",
+            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+          },
+          {
+            title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 3)",
+            category: "Special Event",
+            date: "2026-07-25",
+            time: "4:00 PM (Morning Session: 8:00 AM)",
+            location: "Photizo Dome & Online",
+            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+          },
+          {
+            title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Grand Finale)",
+            category: "Special Event",
+            date: "2026-07-26",
+            time: "4:00 PM (Morning Session: 8:00 AM)",
+            location: "Photizo Dome & Online",
+            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session starts at 4:00 PM. Morning Session starts at 8:00 AM.",
+            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
           },
           {
             title: "All-Night Prophetic Vigil",

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, CreditCard, Landmark, Globe, CheckCircle2, QrCode, Copy, Check, Info, Coins } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -14,6 +14,31 @@ export default function GivingHub() {
   const [showEuropeDetails, setShowEuropeDetails] = useState(false);
   const [showUsaDetails, setShowUsaDetails] = useState(false);
   const [showIBANQR, setShowIBANQR] = useState(false);
+
+  // Close modals on Escape key & manage body scroll lock to prevent trapped scrolls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowLocalDetails(false);
+        setShowDomDetails(false);
+        setShowEuropeDetails(false);
+        setShowUsaDetails(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    const hasAnyOpen = showLocalDetails || showDomDetails || showEuropeDetails || showUsaDetails;
+    if (hasAnyOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [showLocalDetails, showDomDetails, showEuropeDetails, showUsaDetails]);
 
   return (
     <section id="giving" className="relative py-24 px-6 overflow-hidden">
@@ -315,19 +340,20 @@ export default function GivingHub() {
       {/* Local Details Modal */}
       <AnimatePresence>
         {showLocalDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowLocalDetails(false)}
-              className="absolute inset-0 bg-black/85 backdrop-blur-sm" 
+              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-8 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -374,19 +400,20 @@ export default function GivingHub() {
       {/* Domiciliary Details Modal */}
       <AnimatePresence>
         {showDomDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowDomDetails(false)}
-              className="absolute inset-0 bg-black/85 backdrop-blur-sm" 
+              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-8 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -438,19 +465,20 @@ export default function GivingHub() {
       {/* Europe Transfer Modal */}
       <AnimatePresence>
         {showEuropeDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowEuropeDetails(false)}
-              className="absolute inset-0 bg-black/85 backdrop-blur-sm" 
+              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-8 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -536,19 +564,20 @@ export default function GivingHub() {
       {/* USA Transfer Modal */}
       <AnimatePresence>
         {showUsaDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowUsaDetails(false)}
-              className="absolute inset-0 bg-black/85 backdrop-blur-sm" 
+              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-8 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -598,13 +627,46 @@ export default function GivingHub() {
   );
 }
 
+// Safe, cross-browser, iframe-compatible clipboard copy utility with fallback
+const copyTextToClipboard = async (text: string): Promise<boolean> => {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.warn("Failed to copy using navigator.clipboard, trying fallback", err);
+  }
+
+  // Fallback using textarea element
+  try {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    console.error("Fallback: unable to copy", err);
+    return false;
+  }
+};
+
 function DetailRow({ label, value }: { label: string, value: string }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    const success = await copyTextToClipboard(value);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -630,11 +692,13 @@ function DetailRow({ label, value }: { label: string, value: string }) {
 function QuickCopy({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = (e: React.MouseEvent) => {
+  const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    const success = await copyTextToClipboard(value);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
   };
 
   return (
