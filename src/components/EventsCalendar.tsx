@@ -71,10 +71,35 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
         return { ...event, title, description, location };
       });
 
-      // Ensure the "CONTENDING FOR THE FAITH" events are present
-      const contendingEvents: ChurchEvent[] = [
+      const initialEvents: ChurchEvent[] = [
         {
-          id: "contending-for-the-faith-d1",
+          title: "Sunday Illumination Service",
+          category: "Sunday Service",
+          date: "2026-07-05",
+          time: "09:00 AM",
+          location: "Main Sanctuary & Online",
+          description: "An atmospheric service of praise, worship, and deeper prophetic revelations of God's Word with Prophet Japeth Tsukwas.",
+          imageUrl: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=600"
+        },
+        {
+          title: "Midweek Prophetic Revelation",
+          category: "Midweek Service",
+          date: "2026-07-08",
+          time: "05:30 PM",
+          location: "Main Sanctuary & YouTube Live",
+          description: "Our weekly check-point of divine teachings, prophetic instructions, and intense prayers.",
+          imageUrl: "https://images.unsplash.com/photo-1444464666168-49d633b86747?q=80&w=600"
+        },
+        {
+          title: "Atmosphere of Miracles",
+          category: "Special Event",
+          date: "2026-07-19",
+          time: "04:00 PM",
+          location: "Photizo Dome",
+          description: "A special monthly prophetic gathering with healing ministrations, miracles, and specialized spiritual guidance.",
+          imageUrl: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600"
+        },
+        {
           title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 1)",
           category: "Special Event",
           date: "2026-07-23",
@@ -84,7 +109,6 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
           imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
         },
         {
-          id: "contending-for-the-faith-d2",
           title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 2)",
           category: "Special Event",
           date: "2026-07-24",
@@ -94,7 +118,6 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
           imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
         },
         {
-          id: "contending-for-the-faith-d3",
           title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 3)",
           category: "Special Event",
           date: "2026-07-25",
@@ -104,7 +127,6 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
           imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
         },
         {
-          id: "contending-for-the-faith-d4",
           title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Grand Finale)",
           category: "Special Event",
           date: "2026-07-26",
@@ -112,123 +134,70 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
           location: "Photizo Dome & Online",
           description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
           imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+        },
+        {
+          title: "All-Night Prophetic Vigil",
+          category: "Prayer Meeting",
+          date: "2026-07-31",
+          time: "10:00 PM",
+          location: "Main Sanctuary",
+          description: "A power-packed night of intense prayers and prophetic utterances as we birth and establish the coming month.",
+          imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
         }
       ];
 
-      const mergedData = [...correctedData];
-      contendingEvents.forEach(cEvt => {
-        const existingIdx = mergedData.findIndex(evt => 
-          evt.date === cEvt.date && evt.title.toUpperCase().includes("CONTENDING FOR THE FAITH")
-        );
-        if (existingIdx === -1) {
-          mergedData.push(cEvt);
-          
-          // Auto-bootstrap it to Firestore if current user is admin
-          if (isAdmin) {
-            const { id: _, ...dbEvt } = cEvt; // Remove client-side id property
-            firebaseService.upsertEvent(dbEvt);
-          }
-        } else {
-          // If it exists, let's check if the description needs to be updated with ministers
-          const existingEvent = mergedData[existingIdx];
-          if (!existingEvent.description.includes("Donatus Ioruse")) {
-            const updatedEvent = {
-              ...existingEvent,
-              description: cEvt.description
-            };
-            mergedData[existingIdx] = updatedEvent;
-            
-            // Auto-update Firestore if current user is admin
-            if (isAdmin) {
-              firebaseService.upsertEvent(updatedEvent);
-            }
-          }
-        }
-      });
+      // Admin self-healing for duplicates and residual spelling errors
+      if (isAdmin && data.length > 0) {
+        // 1. Identify and delete duplicate events
+        const seen = new Set<string>();
+        const duplicatesToDelete: string[] = [];
+        const sortedData = [...data].sort((a, b) => (a.id || '').localeCompare(b.id || ''));
 
-      setEvents(mergedData);
-      
-      // Auto-bootstrap if empty and admin is viewing, or just trigger initial events
-      if (correctedData.length === 0 && isAdmin) {
-        const initialEvents: ChurchEvent[] = [
-          {
-            title: "Sunday Illumination Service",
-            category: "Sunday Service",
-            date: "2026-07-05",
-            time: "09:00 AM",
-            location: "Main Sanctuary & Online",
-            description: "An atmospheric service of praise, worship, and deeper prophetic revelations of God's Word with Prophet Japeth Tsukwas.",
-            imageUrl: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=600"
-          },
-          {
-            title: "Midweek Prophetic Revelation",
-            category: "Midweek Service",
-            date: "2026-07-08",
-            time: "05:30 PM",
-            location: "Main Sanctuary & YouTube Live",
-            description: "Our weekly check-point of divine teachings, prophetic instructions, and intense prayers.",
-            imageUrl: "https://images.unsplash.com/photo-1444464666168-49d633b86747?q=80&w=600"
-          },
-          {
-            title: "Atmosphere of Miracles",
-            category: "Special Event",
-            date: "2026-07-19",
-            time: "04:00 PM",
-            location: "Photizo Dome",
-            description: "A special monthly prophetic gathering with healing ministrations, miracles, and specialized spiritual guidance.",
-            imageUrl: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600"
-          },
-          {
-            title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 1)",
-            category: "Special Event",
-            date: "2026-07-23",
-            time: "4:00 PM (Morning Session: 8:00 AM)",
-            location: "Photizo Dome & Online",
-            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
-            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
-          },
-          {
-            title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 2)",
-            category: "Special Event",
-            date: "2026-07-24",
-            time: "4:00 PM (Morning Session: 8:00 AM)",
-            location: "Photizo Dome & Online",
-            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
-            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
-          },
-          {
-            title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Day 3)",
-            category: "Special Event",
-            date: "2026-07-25",
-            time: "4:00 PM (Morning Session: 8:00 AM)",
-            location: "Photizo Dome & Online",
-            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF the NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
-            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
-          },
-          {
-            title: "CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH (Grand Finale)",
-            category: "Special Event",
-            date: "2026-07-26",
-            time: "4:00 PM (Morning Session: 8:00 AM)",
-            location: "Photizo Dome & Online",
-            description: "An extraordinary multi-day prophetic convocation: CONTENDING FOR THE FAITH: THE CRY OF THE NORTHERN CHURCH. Join us as we pray, receive deep prophetic insights, and align with divine plans. Evening Session: 4:00 PM. Morning Session: 8:00 AM.\n\nMinisters:\n- Rev Donatus Ioruse\n- Pst Danlandi Hassan\n- Apst Tolu Agboola",
-            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
-          },
-          {
-            title: "All-Night Prophetic Vigil",
-            category: "Prayer Meeting",
-            date: "2026-07-31",
-            time: "10:00 PM",
-            location: "Main Sanctuary",
-            description: "A power-packed night of intense prayers and prophetic utterances as we birth and establish the coming month.",
-            imageUrl: "https://images.unsplash.com/photo-1510531704581-5b2870972060?q=80&w=600"
+        sortedData.forEach(event => {
+          const key = `${event.date}_${(event.title || '').trim().toLowerCase()}`;
+          if (seen.has(key)) {
+            if (event.id) {
+              duplicatesToDelete.push(event.id);
+            }
+          } else {
+            seen.add(key);
           }
-        ];
-        
-        // Auto-bootstrap initial events if list is empty
-        initialEvents.forEach(evt => {
-          firebaseService.upsertEvent(evt);
         });
+
+        if (duplicatesToDelete.length > 0) {
+          console.log(`Self-healing: Deleting ${duplicatesToDelete.length} duplicate events...`);
+          duplicatesToDelete.forEach(id => {
+            firebaseService.deleteEvent(id);
+          });
+        }
+
+        // 2. Permanently fix "Porche" spelling errors in Firestore
+        data.forEach(event => {
+          const needsTitleFix = /Porche/i.test(event.title);
+          const needsDescFix = /Porche/i.test(event.description);
+          const needsLocFix = /Porche/i.test(event.location);
+          if (needsTitleFix || needsDescFix || needsLocFix) {
+            const fixedEvent = {
+              ...event,
+              title: event.title.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH'),
+              description: event.description.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH'),
+              location: event.location.replace(/Porche/g, 'Porch').replace(/PORCHE/g, 'PORCH')
+            };
+            firebaseService.upsertEvent(fixedEvent);
+          }
+        });
+      }
+
+      // If the database is empty, bootstrap it or fall back
+      if (correctedData.length === 0) {
+        if (isAdmin) {
+          initialEvents.forEach(evt => {
+            firebaseService.upsertEvent(evt);
+          });
+        }
+        setEvents(initialEvents);
+      } else {
+        setEvents(correctedData);
       }
     });
 
