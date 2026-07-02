@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut } from 'lucide-react';
+import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { MINISTRY_NAME, LEADERS, CONTACT_INFO } from './constants';
 import GivingHub from './components/GivingHub';
@@ -10,6 +10,53 @@ import { login, logout } from './lib/firebase';
 import { PageSection, firebaseService } from './lib/firebaseService';
 import EditableSection from './components/EditableSection';
 import Markdown from 'react-markdown';
+
+const renderHeroTitle = (title: string) => {
+  let displayTitle = title;
+  if (!displayTitle || displayTitle.toLowerCase().includes("illuminating the soul")) {
+    displayTitle = "Redefining the destinies of men through His Glorious Light";
+  }
+
+  return displayTitle.split(' ').map((word, i) => {
+    const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").toLowerCase();
+    if (cleanWord === 'destinies') {
+      return (
+        <span key={i} className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 font-extrabold italic drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+          {word}{' '}
+        </span>
+      );
+    }
+    if (cleanWord === 'glorious') {
+      return (
+        <span key={i} className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-amber-200 font-semibold tracking-wide drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+          {word}{' '}
+        </span>
+      );
+    }
+    if (cleanWord === 'light') {
+      return (
+        <span key={i} className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-white to-amber-100 font-extrabold tracking-tight glow-text drop-shadow-[0_0_25px_rgba(255,255,255,0.8)]">
+          {word}{' '}
+        </span>
+      );
+    }
+    if (cleanWord === 'redefining') {
+      return (
+        <span key={i} className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400 font-bold">
+          {word}{' '}
+        </span>
+      );
+    }
+    if (cleanWord === 'soul') {
+      return (
+        <span key={i} className="text-gold italic glow-text font-serif">
+          {word}{' '}
+        </span>
+      );
+    }
+    return <span key={i} className="text-zinc-100">{word} </span>;
+  });
+};
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,7 +71,7 @@ export default function App() {
         const initial: PageSection[] = [
           { 
             sectionId: 'hero', 
-            title: 'Illuminating the Soul with Excellence', 
+            title: "Redefining the destinies of men through His Glorious Light", 
             subtitle: `An oasis of revelation led by ${LEADERS.prophet} and ${LEADERS.pastor}.`,
             content: "Through your giving, we are able to reach the world with the message of illumination and excellence. Your seed is a testimony of your faith.",
             order: 0,
@@ -41,6 +88,16 @@ export default function App() {
         ];
         initial.forEach(s => firebaseService.upsertSection(s));
       }
+
+      // Auto-migrate hero title if it contains the old phrase for admin
+      if (isAdmin && data.length > 0) {
+        const heroSec = data.find(s => s.sectionId === 'hero');
+        if (heroSec && (heroSec.title.toLowerCase().includes('illuminating') || heroSec.title === 'New Section')) {
+          heroSec.title = "Redefining the destinies of men through His Glorious Light";
+          firebaseService.upsertSection(heroSec);
+        }
+      }
+
       // Filter to only allow core sections
       setSections(data.filter(s => ['hero', 'about'].includes(s.sectionId)).sort((a, b) => (a.order || 0) - (b.order || 0)));
     });
@@ -131,11 +188,7 @@ export default function App() {
 
                 <div className="max-w-4xl">
                   <h1 className="text-6xl md:text-8xl font-serif leading-[1.1] mb-8">
-                    {section.title.split(' ').map((word, i) => (
-                      <span key={i} className={word.toLowerCase() === 'soul' ? 'text-gold italic glow-text' : ''}>
-                        {word}{' '}
-                      </span>
-                    ))}
+                    {renderHeroTitle(section.title)}
                   </h1>
                   <p className="text-xl md:text-2xl text-zinc-400 mb-10 max-w-2xl mx-auto font-light">
                     {section.subtitle}
@@ -193,20 +246,30 @@ export default function App() {
 
       {/* Contact Section */}
       <section id="contact" className="py-24 px-6 bg-zinc-900/20">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl font-serif mb-16 glow-text">Connect with Us</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             <a href={`https://wa.me/${CONTACT_INFO.whatsapp.replace(/\s/g, '')}`} target="_blank" rel="noreferrer" className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800 hover:border-green-500/50 transition-all group">
               <MessageCircle className="w-8 h-8 text-green-500 mb-4 mx-auto group-hover:scale-110 transition-transform" />
               <h3 className="font-bold mb-2">WhatsApp</h3>
               <p className="text-zinc-500 text-sm">{CONTACT_INFO.whatsapp}</p>
+            </a>
+            <a href={CONTACT_INFO.facebook} target="_blank" rel="noreferrer" className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 transition-all group">
+              <Facebook className="w-8 h-8 text-blue-500 mb-4 mx-auto group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold mb-2">Facebook</h3>
+              <p className="text-zinc-500 text-sm">Follow our Page</p>
+            </a>
+            <a href={CONTACT_INFO.youtube} target="_blank" rel="noreferrer" className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800 hover:border-red-500/50 transition-all group">
+              <Youtube className="w-8 h-8 text-red-500 mb-4 mx-auto group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold mb-2">YouTube</h3>
+              <p className="text-zinc-500 text-sm">Subscribe to Channel</p>
             </a>
             <a href={`mailto:${CONTACT_INFO.email}`} className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800 hover:border-gold/50 transition-all group">
               <Mail className="w-8 h-8 text-gold mb-4 mx-auto group-hover:scale-110 transition-transform" />
               <h3 className="font-bold mb-2">Email Us</h3>
               <p className="text-zinc-500 text-sm">{CONTACT_INFO.email}</p>
             </a>
-            <div className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800">
+            <div className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800 flex flex-col justify-center">
               <Phone className="w-8 h-8 text-zinc-400 mb-4 mx-auto" />
               <h3 className="font-bold mb-2">Counseling</h3>
               <p className="text-zinc-500 text-sm">Mon - Fri: 10am - 4pm</p>
@@ -231,6 +294,12 @@ export default function App() {
           <div className="flex flex-wrap justify-center gap-8 text-xs text-zinc-500 uppercase tracking-widest font-medium">
             <a href="#" className="hover:text-gold transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-gold transition-colors">Terms of Service</a>
+            <a href={CONTACT_INFO.facebook} target="_blank" rel="noreferrer" className="hover:text-gold transition-colors flex items-center gap-1">
+              <Facebook size={12} /> Facebook
+            </a>
+            <a href={CONTACT_INFO.youtube} target="_blank" rel="noreferrer" className="hover:text-gold transition-colors flex items-center gap-1">
+              <Youtube size={12} /> YouTube
+            </a>
             {!user ? (
               <button 
                 onClick={login}
