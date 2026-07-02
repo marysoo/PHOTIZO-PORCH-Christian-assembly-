@@ -61,6 +61,36 @@
         "title": { "type": "string" }
       },
       "required": ["isLive", "streamId", "platform"]
+    },
+    "Event": {
+      "title": "Church Event",
+      "description": "An upcoming church activity, service, or event",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "location": { "type": "string" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["title", "description", "date", "time", "location", "category"]
+    },
+    "Sermon": {
+      "title": "Audio Sermon",
+      "description": "An audio sermon or podcast episode",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "speaker": { "type": "string" },
+        "date": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "duration": { "type": "string" }
+      },
+      "required": ["title", "speaker", "date", "audioUrl", "description", "category"]
     }
   },
   "firestore": {
@@ -83,6 +113,14 @@
     "/settings/stream": {
       "schema": "LiveStream",
       "description": "Live streaming configuration"
+    },
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Upcoming church events and activities"
+    },
+    "/sermons/{sermonId}": {
+      "schema": "Sermon",
+      "description": "Audio sermons and podcast episodes"
     }
   }
 }

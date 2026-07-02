@@ -50,6 +50,28 @@ export interface LiveStream {
   title?: string;
 }
 
+export interface ChurchEvent {
+  id?: string;
+  title: string;
+  description: string;
+  date: string; // YYYY-MM-DD
+  time: string;
+  location: string;
+  category: string;
+  imageUrl?: string;
+}
+
+export interface Sermon {
+  id?: string;
+  title: string;
+  speaker: string;
+  date: string; // YYYY-MM-DD
+  audioUrl: string;
+  description: string;
+  category: string;
+  duration?: string;
+}
+
 export const firebaseService = {
   // Site Settings
   async getSiteSettings(): Promise<SiteSettings | null> {
@@ -169,6 +191,70 @@ export const firebaseService = {
       await setDoc(doc(db, path), stream);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  // Events
+  subscribeEvents(callback: (events: ChurchEvent[]) => void) {
+    const path = 'events';
+    const q = query(collection(db, path), orderBy('date', 'asc'));
+    return onSnapshot(q, (snap) => {
+      const events = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChurchEvent));
+      callback(events);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+    });
+  },
+
+  async upsertEvent(event: ChurchEvent) {
+    const eventId = event.id || `${Date.now()}`;
+    const path = `events/${eventId}`;
+    const { id, ...data } = event;
+    try {
+      await setDoc(doc(db, 'events', eventId), data);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async deleteEvent(eventId: string) {
+    const path = `events/${eventId}`;
+    try {
+      await deleteDoc(doc(db, 'events', eventId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+    }
+  },
+
+  // Sermons / Podcasts
+  subscribeSermons(callback: (sermons: Sermon[]) => void) {
+    const path = 'sermons';
+    const q = query(collection(db, path), orderBy('date', 'desc')); // Newer sermons first
+    return onSnapshot(q, (snap) => {
+      const sermons = snap.docs.map(d => ({ id: d.id, ...d.data() } as Sermon));
+      callback(sermons);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+    });
+  },
+
+  async upsertSermon(sermon: Sermon) {
+    const sermonId = sermon.id || `${Date.now()}`;
+    const path = `sermons/${sermonId}`;
+    const { id, ...data } = sermon;
+    try {
+      await setDoc(doc(db, 'sermons', sermonId), data);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async deleteSermon(sermonId: string) {
+    const path = `sermons/${sermonId}`;
+    try {
+      await deleteDoc(doc(db, 'sermons', sermonId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
     }
   }
 };

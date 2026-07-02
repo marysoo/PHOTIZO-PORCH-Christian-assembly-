@@ -52,6 +52,26 @@ service cloud.firestore {
       return data.streamId is string && data.platform in ['youtube', 'vimeo'] && data.isLive is bool;
     }
 
+    function isValidEvent(data) {
+      return data.title is string && data.title.size() <= 200 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.date is string && data.date.size() <= 50 &&
+             data.time is string && data.time.size() <= 50 &&
+             data.location is string && data.location.size() <= 200 &&
+             data.category is string && data.category.size() <= 50 &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 500));
+    }
+
+    function isValidSermon(data) {
+      return data.title is string && data.title.size() <= 200 &&
+             data.speaker is string && data.speaker.size() <= 100 &&
+             data.date is string && data.date.size() <= 50 &&
+             data.audioUrl is string && data.audioUrl.size() <= 1000 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.category is string && data.category.size() <= 100 &&
+             (!('duration' in data) || (data.duration is string && data.duration.size() <= 50));
+    }
+
     // Rules
     match /settings/global {
       allow read: if true;
@@ -78,6 +98,18 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow create: if isValidId(requestId) && isValidPrayerRequest(request.resource.data);
       allow update, delete: if isAdmin();
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(eventId) && isValidEvent(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /sermons/{sermonId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(sermonId) && isValidSermon(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /admins/{userId} {

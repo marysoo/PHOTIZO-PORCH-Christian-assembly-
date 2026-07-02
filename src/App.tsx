@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { MINISTRY_NAME, LEADERS, CONTACT_INFO } from './constants';
 import GivingHub from './components/GivingHub';
 import PrayerSystem from './components/PrayerSystem';
+import EventsCalendar from './components/EventsCalendar';
+import AudioSermons from './components/AudioSermons';
 import LiveStreamHero from './components/LiveStreamHero';
 import { useAuth } from './lib/AuthContext';
 import { login, logout } from './lib/firebase';
@@ -63,6 +65,22 @@ export default function App() {
   const { user, isAdmin } = useAuth();
   const [sections, setSections] = useState<PageSection[]>([]);
   const [isAddingSection, setIsAddingSection] = useState(false);
+  const [showPortal, setShowPortal] = useState(() => {
+    return localStorage.getItem('show_portal') === 'true';
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('portal') === 'true' || params.get('admin') === 'true') {
+      localStorage.setItem('show_portal', 'true');
+      setShowPortal(true);
+      // Clean up URL parameters to keep the browser address bar clean
+      const url = new URL(window.location.href);
+      url.searchParams.delete('portal');
+      url.searchParams.delete('admin');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
 
   useEffect(() => {
     const unsub = firebaseService.subscribeSections((data) => {
@@ -129,6 +147,8 @@ export default function App() {
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <a href="#about" className="hover:text-gold transition-colors">About Us</a>
+            <a href="#calendar" className="hover:text-gold transition-colors">Calendar</a>
+            <a href="#sermons" className="hover:text-gold transition-colors">Sermons</a>
             <a href="#giving" className="hover:text-gold transition-colors">Giving</a>
             <a href="#contact" className="hover:text-gold transition-colors">Contact</a>
             <button className="bg-zinc-100 text-zinc-950 px-5 py-2.5 rounded-full font-bold hover:bg-gold hover:text-white transition-all cursor-pointer">
@@ -154,6 +174,8 @@ export default function App() {
             <button onClick={() => setIsMenuOpen(false)} className="self-end"><X size={32} /></button>
             <div className="flex flex-col gap-6 text-2xl font-serif">
               <a href="#about" onClick={() => setIsMenuOpen(false)}>About Us</a>
+              <a href="#calendar" onClick={() => setIsMenuOpen(false)}>Calendar</a>
+              <a href="#sermons" onClick={() => setIsMenuOpen(false)}>Sermons</a>
               <a href="#giving" onClick={() => setIsMenuOpen(false)}>Giving</a>
               <a href="#contact" onClick={() => setIsMenuOpen(false)}>Contact</a>
             </div>
@@ -240,6 +262,10 @@ export default function App() {
         ))}
       </main>
 
+      <EventsCalendar isAdmin={isAdmin} />
+
+      <AudioSermons isAdmin={isAdmin} />
+
       <PrayerSystem isAdmin={isAdmin} />
 
       <GivingHub />
@@ -284,11 +310,7 @@ export default function App() {
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <span className="text-xl font-bold glow-text tracking-tighter mb-1">{MINISTRY_NAME}</span>
             <p className="text-zinc-600 text-sm">
-              &copy; <span 
-                onClick={login} 
-                className="cursor-default hover:text-gold/20 transition-colors"
-                title="Admin Access"
-              >{new Date().getFullYear()}</span> Photizo Porche. All Rights Reserved.
+              &copy; <span>{new Date().getFullYear()}</span> Photizo Porche. All Rights Reserved.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-8 text-xs text-zinc-500 uppercase tracking-widest font-medium">
@@ -300,17 +322,19 @@ export default function App() {
             <a href={CONTACT_INFO.youtube} target="_blank" rel="noreferrer" className="hover:text-gold transition-colors flex items-center gap-1">
               <Youtube size={12} /> YouTube
             </a>
-            {!user ? (
-              <button 
-                onClick={login}
-                className="hover:text-gold transition-colors cursor-pointer flex items-center gap-1 opacity-20 hover:opacity-100 transition-opacity"
-              >
-                <LogIn size={12} /> Staff Portal
-              </button>
-            ) : (
-              <span className="text-gold flex items-center gap-1 animate-pulse">
-                <Sparkles size={14} /> Admin Active
-              </span>
+            {showPortal && (
+              !user ? (
+                <button 
+                  onClick={login}
+                  className="hover:text-gold transition-colors cursor-pointer flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity"
+                >
+                  <LogIn size={12} /> Staff Portal
+                </button>
+              ) : (
+                <span className="text-gold flex items-center gap-1 animate-pulse">
+                  <Sparkles size={14} /> Admin Active
+                </span>
+              )
             )}
           </div>
         </div>
