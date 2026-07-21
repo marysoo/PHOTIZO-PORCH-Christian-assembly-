@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube } from 'lucide-react';
+import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube, Trash2, Camera, Upload } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { MINISTRY_NAME, LEADERS, CONTACT_INFO } from './constants';
 import GivingHub from './components/GivingHub';
@@ -12,6 +12,7 @@ import { login, logout } from './lib/firebase';
 import { PageSection, firebaseService } from './lib/firebaseService';
 import EditableSection from './components/EditableSection';
 import ExcerptGallery from './components/ExcerptGallery';
+import Blog from './components/Blog';
 import Markdown from 'react-markdown';
 
 const renderHeroTitle = (title: string) => {
@@ -64,6 +65,68 @@ const renderHeroTitle = (title: string) => {
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAdmin: actualIsAdmin } = useAuth();
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleAboutImageUpload = (file: File, section: PageSection) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        const img = new Image();
+        img.src = event.target.result as string;
+        img.onload = async () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const maxDimension = 1200;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            alert('Could not process image.');
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          try {
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            await firebaseService.upsertSection({
+              ...section,
+              imageUrl: compressedDataUrl
+            });
+          } catch (e) {
+            alert('Image constraints prevented saving.');
+          }
+        };
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAboutImageDelete = async (section: PageSection) => {
+    if (window.confirm('Are you sure you want to delete the image from the About section?')) {
+      await firebaseService.upsertSection({
+        ...section,
+        imageUrl: ''
+      });
+    }
+  };
   
   // Interactive sandbox Edit Mode. Initialized to true for frictionless editing/uploading.
   const [isEditMode, setIsEditMode] = useState(() => {
@@ -160,18 +223,24 @@ export default function App() {
             subtitle: 'Enlightening hearts with the knowledge of God\'s glory.',
             content: "Photizo Porch Christian Assembly is more than a church; it is a portal of divine illumination. Our name, derived from the Greek 'Photizo,' signifies our sacred mandate to enlighten hearts and manifest kingdom excellence.\n\nUnder the leadership of Prophet Japeth Tsukwas, we are building a global community dedicated to supernatural manifestations and purposeful living.",
             order: 1,
-            imageUrl: "https://images.unsplash.com/photo-1444464666168-49d633b86747?q=80&w=2069&auto=format&fit=crop"
+            imageUrl: "/images/prophet_japhet_portrait.jpg"
           }
         ];
         initial.forEach(s => firebaseService.upsertSection(s));
       }
 
-      // Auto-migrate hero title if it contains the old phrase for admin
+      // Auto-migrate hero and about sections for the new image / text
       if (isEditMode && correctedData.length > 0) {
         const heroSec = correctedData.find(s => s.sectionId === 'hero');
         if (heroSec && (heroSec.title.toLowerCase().includes('illuminating') || heroSec.title === 'New Section')) {
           heroSec.title = "Redefining the destinies of men through His Glorious Light";
           firebaseService.upsertSection(heroSec);
+        }
+
+        const aboutSec = correctedData.find(s => s.sectionId === 'about');
+        if (aboutSec && (!aboutSec.imageUrl || aboutSec.imageUrl.includes('unsplash.com'))) {
+          aboutSec.imageUrl = "/images/prophet_japhet_portrait.jpg";
+          firebaseService.upsertSection(aboutSec);
         }
       }
 
@@ -220,6 +289,7 @@ export default function App() {
             <a href="#gallery" className="hover:text-gold transition-colors">Gallery</a>
             <a href="#calendar" className="hover:text-gold transition-colors">Calendar</a>
             <a href="#sermons" className="hover:text-gold transition-colors">Sermons</a>
+            <a href="#blog" className="hover:text-gold transition-colors">Gazette</a>
             <a href="#giving" className="hover:text-gold transition-colors">Giving</a>
             <a href="#contact" className="hover:text-gold transition-colors">Contact</a>
             <button className="bg-zinc-100 text-zinc-950 px-5 py-2.5 rounded-full font-bold hover:bg-gold hover:text-white transition-all cursor-pointer">
@@ -248,6 +318,7 @@ export default function App() {
               <a href="#gallery" onClick={() => setIsMenuOpen(false)}>Gallery</a>
               <a href="#calendar" onClick={() => setIsMenuOpen(false)}>Calendar</a>
               <a href="#sermons" onClick={() => setIsMenuOpen(false)}>Sermons</a>
+              <a href="#blog" onClick={() => setIsMenuOpen(false)}>Gazette</a>
               <a href="#giving" onClick={() => setIsMenuOpen(false)}>Giving</a>
               <a href="#contact" onClick={() => setIsMenuOpen(false)}>Contact</a>
             </div>
@@ -299,17 +370,101 @@ export default function App() {
               </header>
             ) : section.sectionId === 'about' ? (
               <section id="about" className="py-24 px-6 border-y border-zinc-900 bg-zinc-950/50">
-                <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-                  <div className="relative aspect-[4/5] rounded-3xl overflow-hidden group">
-                    <img 
-                      src={section.imageUrl || "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=2069&auto=format&fit=crop"} 
-                      alt="Ministry" 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
-                  </div>
-                  <div>
+                <div className={`max-w-6xl mx-auto ${section.imageUrl || isEditMode ? 'grid md:grid-cols-2 gap-16 items-center' : 'max-w-3xl text-center'}`}>
+                  {(section.imageUrl || isEditMode) && (
+                    <div 
+                      className={`relative aspect-[4/5] rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900 ${
+                        dragActive 
+                          ? 'border-gold shadow-[0_0_25px_rgba(212,175,55,0.25)]' 
+                          : 'hover:border-zinc-700'
+                      } group/img transition-all`}
+                      onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                      onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragActive(false);
+                        if (e.dataTransfer.files?.[0]) {
+                          handleAboutImageUpload(e.dataTransfer.files[0], section);
+                        }
+                      }}
+                    >
+                      {section.imageUrl ? (
+                        <>
+                          <img 
+                            src={section.imageUrl} 
+                            alt="Ministry" 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
+                          
+                          {/* Admin Overlay Controls directly on image */}
+                          {isEditMode && (
+                            <div className="absolute inset-0 flex flex-col justify-between p-6 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity z-10">
+                              <div className="flex justify-between items-start">
+                                <span className="bg-zinc-950/90 text-gold text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-zinc-800">
+                                  About Image
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAboutImageDelete(section);
+                                  }}
+                                  className="p-2.5 bg-red-950/90 hover:bg-red-600 border border-red-500/30 text-red-200 hover:text-white rounded-full transition-all cursor-pointer shadow-lg hover:scale-105"
+                                  title="Delete Image"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              <div className="flex justify-center">
+                                <label className="flex items-center gap-2 px-5 py-3 bg-gold hover:bg-amber-500 text-zinc-950 font-bold text-xs rounded-full cursor-pointer shadow-xl hover:scale-105 active:scale-95 transition-all">
+                                  <Camera className="w-4 h-4" />
+                                  Change Image
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                      if (e.target.files?.[0]) {
+                                        handleAboutImageUpload(e.target.files[0], section);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        /* Empty/Deleted State (Only visible to admin to upload) */
+                        isEditMode && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-zinc-800 hover:border-gold/50 rounded-3xl transition-all animate-pulse">
+                            <div className="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center mb-4 text-zinc-500">
+                              <Upload className="w-8 h-8" />
+                            </div>
+                            <h4 className="text-lg font-bold text-zinc-300 mb-1">Add About Image</h4>
+                            <p className="text-xs text-zinc-500 mb-6 max-w-xs">Drag and drop an image file here, or click the button below to browse</p>
+                            <label className="flex items-center gap-2 px-5 py-3 bg-zinc-900 hover:bg-zinc-850 text-gold border border-gold/30 hover:border-gold/60 font-bold text-xs rounded-full cursor-pointer shadow-xl transition-all">
+                              <Camera className="w-4 h-4" />
+                              Browse Image
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    handleAboutImageUpload(e.target.files[0], section);
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                  <div className={section.imageUrl || isEditMode ? '' : 'max-w-3xl mx-auto'}>
                     <h2 className="text-4xl md:text-5xl font-serif mb-8 glow-text">{section.title}</h2>
                     <div className="prose prose-invert max-w-none text-zinc-400 text-lg leading-relaxed space-y-6">
                       <Markdown>{section.content}</Markdown>
@@ -339,6 +494,8 @@ export default function App() {
       <EventsCalendar isAdmin={isEditMode} />
 
       <AudioSermons isAdmin={isEditMode} />
+
+      <Blog isAdmin={isEditMode} />
 
       <PrayerSystem isAdmin={isEditMode} />
 

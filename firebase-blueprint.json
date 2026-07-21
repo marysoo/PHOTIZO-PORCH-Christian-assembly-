@@ -103,6 +103,21 @@
         "category": { "type": "string" }
       },
       "required": ["text", "source", "imageUrl"]
+    },
+    "BlogPost": {
+      "title": "Blog Post",
+      "description": "An article or blog post written by the ministry",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "author": { "type": "string" },
+        "date": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "category": { "type": "string" },
+        "summary": { "type": "string" }
+      },
+      "required": ["title", "content", "author", "date"]
     }
   },
   "firestore": {
@@ -137,6 +152,10 @@
     "/excerpts/{excerptId}": {
       "schema": "Excerpt",
       "description": "Wisdom quotes and outreach gallery cards"
+    },
+    "/blogPosts/{postId}": {
+      "schema": "BlogPost",
+      "description": "Ministry articles and announcements"
     }
   }
 }

@@ -76,6 +76,16 @@ service cloud.firestore {
              (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 4000000));
     }
 
+    function isValidBlogPost(data) {
+      return data.title is string && data.title.size() <= 300 &&
+             data.content is string && data.content.size() <= 50000 &&
+             data.author is string && data.author.size() <= 100 &&
+             data.date is string && data.date.size() <= 50 &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+             (!('summary' in data) || (data.summary is string && data.summary.size() <= 1000)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 4000000));
+    }
+
     // Rules
     match /settings/global {
       allow read: if true;
@@ -119,6 +129,12 @@ service cloud.firestore {
     match /excerpts/{excerptId} {
       allow read: if true;
       allow create, update: if isAdmin() && isValidId(excerptId) && isValidExcerpt(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /blogPosts/{postId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(postId) && isValidBlogPost(request.resource.data);
       allow delete: if isAdmin();
     }
 

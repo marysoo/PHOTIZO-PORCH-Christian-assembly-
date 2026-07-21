@@ -80,6 +80,17 @@ export interface Excerpt {
   category?: string;
 }
 
+export interface BlogPost {
+  id?: string;
+  title: string;
+  content: string;
+  author: string;
+  date: string; // YYYY-MM-DD
+  imageUrl?: string;
+  category?: string;
+  summary?: string;
+}
+
 export const firebaseService = {
   // Site Settings
   async getSiteSettings(): Promise<SiteSettings | null> {
@@ -293,6 +304,44 @@ export const firebaseService = {
     const path = `excerpts/${excerptId}`;
     try {
       await deleteDoc(doc(db, 'excerpts', excerptId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+    }
+  },
+
+  // Blog Posts
+  subscribeBlogPosts(callback: (posts: BlogPost[]) => void) {
+    const path = 'blogPosts';
+    const q = query(collection(db, path), orderBy('date', 'desc'));
+    return onSnapshot(q, (snap) => {
+      const posts = snap.docs.map(d => ({ id: d.id, ...d.data() } as BlogPost));
+      callback(posts);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+    });
+  },
+
+  async upsertBlogPost(post: BlogPost) {
+    const postId = post.id || `${Date.now()}`;
+    const path = `blogPosts/${postId}`;
+    const { id, ...data } = post;
+    
+    // Filter out undefined properties to prevent Firestore setDoc failures
+    const cleanData = Object.fromEntries(
+      Object.entries(data).filter(([_, v]) => v !== undefined)
+    );
+
+    try {
+      await setDoc(doc(db, 'blogPosts', postId), cleanData);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async deleteBlogPost(postId: string) {
+    const path = `blogPosts/${postId}`;
+    try {
+      await deleteDoc(doc(db, 'blogPosts', postId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
     }
