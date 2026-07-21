@@ -91,6 +91,18 @@
         "duration": { "type": "string" }
       },
       "required": ["title", "speaker", "date", "audioUrl", "description", "category"]
+    },
+    "Excerpt": {
+      "title": "Excerpt Gallery",
+      "description": "A wisdom quote or outreach photo gallery card",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "source": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["text", "source", "imageUrl"]
     }
   },
   "firestore": {
@@ -121,6 +133,10 @@
     "/sermons/{sermonId}": {
       "schema": "Sermon",
       "description": "Audio sermons and podcast episodes"
+    },
+    "/excerpts/{excerptId}": {
+      "schema": "Excerpt",
+      "description": "Wisdom quotes and outreach gallery cards"
     }
   }
 }

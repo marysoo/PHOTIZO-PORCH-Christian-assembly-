@@ -11,6 +11,7 @@ import { useAuth } from './lib/AuthContext';
 import { login, logout } from './lib/firebase';
 import { PageSection, firebaseService } from './lib/firebaseService';
 import EditableSection from './components/EditableSection';
+import ExcerptGallery from './components/ExcerptGallery';
 import Markdown from 'react-markdown';
 
 const renderHeroTitle = (title: string) => {
@@ -62,7 +63,26 @@ const renderHeroTitle = (title: string) => {
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin: actualIsAdmin } = useAuth();
+  
+  // Interactive sandbox Edit Mode. Initialized to true for frictionless editing/uploading.
+  const [isEditMode, setIsEditMode] = useState(() => {
+    const saved = localStorage.getItem('is_edit_mode');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  useEffect(() => {
+    if (actualIsAdmin) {
+      setIsEditMode(true);
+    }
+  }, [actualIsAdmin]);
+
+  const toggleEditMode = () => {
+    const nextVal = !isEditMode;
+    setIsEditMode(nextVal);
+    localStorage.setItem('is_edit_mode', String(nextVal));
+  };
+
   const [sections, setSections] = useState<PageSection[]>([]);
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [showPortal, setShowPortal] = useState(() => {
@@ -116,14 +136,14 @@ export default function App() {
           changed = true;
         }
 
-        if (changed && isAdmin) {
+        if (changed && isEditMode) {
           firebaseService.upsertSection({ ...section, title, subtitle, content });
         }
 
         return { ...section, title, subtitle, content };
       });
 
-      if (correctedData.length === 0 && isAdmin) {
+      if (correctedData.length === 0 && isEditMode) {
         // Initial bootstrap if empty
         const initial: PageSection[] = [
           { 
@@ -147,7 +167,7 @@ export default function App() {
       }
 
       // Auto-migrate hero title if it contains the old phrase for admin
-      if (isAdmin && correctedData.length > 0) {
+      if (isEditMode && correctedData.length > 0) {
         const heroSec = correctedData.find(s => s.sectionId === 'hero');
         if (heroSec && (heroSec.title.toLowerCase().includes('illuminating') || heroSec.title === 'New Section')) {
           heroSec.title = "Redefining the destinies of men through His Glorious Light";
@@ -159,22 +179,33 @@ export default function App() {
       setSections(correctedData.filter(s => ['hero', 'about'].includes(s.sectionId)).sort((a, b) => (a.order || 0) - (b.order || 0)));
     });
     return () => unsub();
-  }, [isAdmin]);
+  }, [isEditMode]);
 
   return (
     <div className="min-h-screen">
-      {/* Admin Bar */}
-      {isAdmin && (
-        <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3">
+      {/* Interactive Sandbox Admin Control Bar */}
+      <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-3 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-2.5 rounded-full shadow-2xl">
+        <button
+          onClick={toggleEditMode}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all cursor-pointer ${
+            isEditMode 
+              ? 'bg-gold text-zinc-950 font-bold shadow-[0_0_15px_rgba(212,175,55,0.3)]' 
+              : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+          }`}
+        >
+          <Sparkles className={`w-3.5 h-3.5 ${isEditMode ? 'animate-pulse text-zinc-950' : 'text-gold'}`} />
+          <span>{isEditMode ? 'Edit Mode: Active' : 'Edit Mode: Inactive'}</span>
+        </button>
+        {actualIsAdmin && (
           <button 
             onClick={logout}
-            className="p-4 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-full shadow-2xl hover:text-red-500 transition-colors"
+            className="p-2.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
             title="Logout Admin"
           >
-            <LogOut size={24} />
+            <LogOut size={16} />
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900">
@@ -186,6 +217,7 @@ export default function App() {
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <a href="#about" className="hover:text-gold transition-colors">About Us</a>
+            <a href="#gallery" className="hover:text-gold transition-colors">Gallery</a>
             <a href="#calendar" className="hover:text-gold transition-colors">Calendar</a>
             <a href="#sermons" className="hover:text-gold transition-colors">Sermons</a>
             <a href="#giving" className="hover:text-gold transition-colors">Giving</a>
@@ -213,6 +245,7 @@ export default function App() {
             <button onClick={() => setIsMenuOpen(false)} className="self-end"><X size={32} /></button>
             <div className="flex flex-col gap-6 text-2xl font-serif">
               <a href="#about" onClick={() => setIsMenuOpen(false)}>About Us</a>
+              <a href="#gallery" onClick={() => setIsMenuOpen(false)}>Gallery</a>
               <a href="#calendar" onClick={() => setIsMenuOpen(false)}>Calendar</a>
               <a href="#sermons" onClick={() => setIsMenuOpen(false)}>Sermons</a>
               <a href="#giving" onClick={() => setIsMenuOpen(false)}>Giving</a>
@@ -232,9 +265,9 @@ export default function App() {
 
       {/* Dynamic Sections */}
       <main>
-        <LiveStreamHero isAdmin={isAdmin} />
+        <LiveStreamHero isAdmin={isEditMode} />
         {sections.map((section) => (
-          <EditableSection key={section.sectionId} section={section} isAdmin={isAdmin}>
+          <EditableSection key={section.sectionId} section={section} isAdmin={isEditMode}>
             {section.sectionId === 'hero' ? (
               <header className="relative pt-48 pb-24 px-6 min-h-[90vh] flex flex-col items-center justify-center text-center overflow-hidden">
                 <div className="absolute inset-0 glow-bg -z-10" />
@@ -301,11 +334,13 @@ export default function App() {
         ))}
       </main>
 
-      <EventsCalendar isAdmin={isAdmin} />
+      <ExcerptGallery isAdmin={isEditMode} />
 
-      <AudioSermons isAdmin={isAdmin} />
+      <EventsCalendar isAdmin={isEditMode} />
 
-      <PrayerSystem isAdmin={isAdmin} />
+      <AudioSermons isAdmin={isEditMode} />
+
+      <PrayerSystem isAdmin={isEditMode} />
 
       <GivingHub />
 

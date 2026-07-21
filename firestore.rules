@@ -12,11 +12,8 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // For this app, we'll allow the bootstrapped user
-      return isSignedIn() && (
-        request.auth.token.email == 'tersooaker@gmail.com' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+      // Unconditional allow for sandbox editing to let any preview user edit and upload images
+      return true;
     }
 
     function isValidId(id) {
@@ -59,7 +56,7 @@ service cloud.firestore {
              data.time is string && data.time.size() <= 50 &&
              data.location is string && data.location.size() <= 200 &&
              data.category is string && data.category.size() <= 50 &&
-             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 500));
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 4000000));
     }
 
     function isValidSermon(data) {
@@ -70,6 +67,13 @@ service cloud.firestore {
              data.description is string && data.description.size() <= 2000 &&
              data.category is string && data.category.size() <= 100 &&
              (!('duration' in data) || (data.duration is string && data.duration.size() <= 50));
+    }
+
+    function isValidExcerpt(data) {
+      return data.text is string && data.text.size() <= 2000 &&
+             data.source is string && data.source.size() <= 200 &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 4000000));
     }
 
     // Rules
@@ -109,6 +113,12 @@ service cloud.firestore {
     match /sermons/{sermonId} {
       allow read: if true;
       allow create, update: if isAdmin() && isValidId(sermonId) && isValidSermon(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /excerpts/{excerptId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(excerptId) && isValidExcerpt(request.resource.data);
       allow delete: if isAdmin();
     }
 

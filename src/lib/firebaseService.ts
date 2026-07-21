@@ -72,6 +72,14 @@ export interface Sermon {
   duration?: string;
 }
 
+export interface Excerpt {
+  id?: string;
+  text: string;
+  source: string;
+  imageUrl: string;
+  category?: string;
+}
+
 export const firebaseService = {
   // Site Settings
   async getSiteSettings(): Promise<SiteSettings | null> {
@@ -253,6 +261,38 @@ export const firebaseService = {
     const path = `sermons/${sermonId}`;
     try {
       await deleteDoc(doc(db, 'sermons', sermonId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+    }
+  },
+
+  // Excerpts & Gallery
+  subscribeExcerpts(callback: (excerpts: Excerpt[]) => void) {
+    const path = 'excerpts';
+    const q = query(collection(db, path));
+    return onSnapshot(q, (snap) => {
+      const excerpts = snap.docs.map(d => ({ id: d.id, ...d.data() } as Excerpt));
+      callback(excerpts);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+    });
+  },
+
+  async upsertExcerpt(excerpt: Excerpt) {
+    const excerptId = excerpt.id || `${Date.now()}`;
+    const path = `excerpts/${excerptId}`;
+    const { id, ...data } = excerpt;
+    try {
+      await setDoc(doc(db, 'excerpts', excerptId), data);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async deleteExcerpt(excerptId: string) {
+    const path = `excerpts/${excerptId}`;
+    try {
+      await deleteDoc(doc(db, 'excerpts', excerptId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
     }
