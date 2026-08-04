@@ -16,7 +16,9 @@ import {
   FileText,
   UploadCloud,
   Heart,
-  Gift
+  Gift,
+  Eye,
+  Maximize2
 } from 'lucide-react';
 import { firebaseService, Excerpt } from '../lib/firebaseService';
 
@@ -140,6 +142,13 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
   const [success, setSuccess] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Lightbox Modal state for full-screen photo viewing
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Batch uploading state
+  const [isBatchUploading, setIsBatchUploading] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -153,75 +162,88 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
     e.preventDefault();
     setIsDragging(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      processFile(file);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      processFile(file);
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(Array.from(e.target.files));
+      e.target.value = '';
     }
   };
 
-  const processFile = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file (PNG, JPG, WEBP, etc.)');
+  const processFiles = async (files: File[]) => {
+    const validImages = files.filter(f => f.type.startsWith('image/'));
+    if (validImages.length === 0) {
+      setError('Please select valid image files (PNG, JPG, WEBP, etc.)');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        const img = new Image();
-        img.src = event.target.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          // Target max resolution of 1000px for the longer edge to stay visually pristine
-          const maxDimension = 1000;
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
-            } else {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
-            }
-          }
+    // If single file selected while editing inside the form modal, set single imageUrl for that form
+    if (validImages.length === 1 && isFormOpen) {
+      const file = validImages[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setImageUrl(event.target.result as string);
+          setError('');
+        }
+      };
+      reader.onerror = () => {
+        setError('Error reading file. Please try again.');
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            setError('Could not compress image. Browser canvas error.');
-            return;
-          }
+    // Multiple files or direct batch upload:
+    setIsBatchUploading(true);
+    setBatchProgress({ current: 0, total: validImages.length });
+    setError('');
 
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          // Convert to JPEG with 0.75 quality - this guarantees the file size is typically < 100KB,
-          // far below Firestore's 1MB limit, while remaining visually sharp.
-          try {
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            setImageUrl(compressedDataUrl);
-          } catch (e) {
-            setError('Image security constraints prevented direct compression.');
-          }
+    try {
+      for (let i = 0; i < validImages.length; i++) {
+        const file = validImages[i];
+        setBatchProgress({ current: i + 1, total: validImages.length });
+
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) resolve(e.target.result as string);
+            else reject(new Error('Failed to read image file.'));
+          };
+          reader.onerror = () => reject(new Error(`Error reading file ${file.name}`));
+          reader.readAsDataURL(file);
+        });
+
+        const defaultTitle = file.name
+          .replace(/\.[^/.]+$/, "")
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (char) => char.toUpperCase());
+
+        const newExcerpt: Omit<Excerpt, 'id'> = {
+          text: defaultTitle || (activeTab === 'humanitarian' ? 'Humanitarian Outreach' : 'Prophetic Declaration'),
+          source: source.trim() || 'Prophet Japhet Tsukwas',
+          category: category.trim() || (activeTab === 'humanitarian' ? 'Love in Action' : 'Prophetic Declaration'),
+          imageUrl: dataUrl
         };
-        img.onerror = () => {
-          setError('Failed to load image. File may be corrupted.');
-        };
+
+        await firebaseService.upsertExcerpt(newExcerpt);
       }
-    };
-    reader.onerror = () => {
-      setError('Error reading file. Please try again.');
-    };
-    reader.readAsDataURL(file);
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
+      if (isFormOpen) {
+        setIsFormOpen(false);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error uploading multiple images.');
+    } finally {
+      setIsBatchUploading(false);
+      setBatchProgress(null);
+    }
   };
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -411,13 +433,26 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
           </div>
           
           {isAdmin && (
-            <button
-              onClick={openAddForm}
-              className="flex items-center gap-2 bg-gold hover:bg-amber-500 text-zinc-950 px-6 py-3 rounded-full font-bold transition-all shadow-lg shadow-gold/20 shrink-0 self-start md:self-auto cursor-pointer"
-            >
-              <Plus className="w-5 h-5 stroke-[2.5]" />
-              <span>Add Excerpt</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-3 shrink-0 self-start md:self-auto">
+              <label className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-gold border border-gold/30 px-5 py-3 rounded-full font-bold transition-all shadow-lg hover:border-gold cursor-pointer text-sm">
+                <UploadCloud className="w-5 h-5 text-gold" />
+                <span>Upload Multiple Photos</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={openAddForm}
+                className="flex items-center gap-2 bg-gold hover:bg-amber-500 text-zinc-950 px-6 py-3 rounded-full font-bold transition-all shadow-lg shadow-gold/20 cursor-pointer text-sm"
+              >
+                <Plus className="w-5 h-5 stroke-[2.5]" />
+                <span>Add Excerpt</span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -447,6 +482,29 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
           </button>
         </div>
 
+        {/* Batch Uploading Progress Banner */}
+        {isBatchUploading && batchProgress && (
+          <div className="mb-8 p-5 bg-zinc-900/95 border border-gold/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-gold shadow-2xl animate-pulse">
+            <div className="flex items-center gap-3">
+              <UploadCloud className="w-6 h-6 animate-bounce text-gold shrink-0" />
+              <div>
+                <p className="font-bold text-sm text-white">
+                  Batch Uploading Gallery Images ({batchProgress.current} of {batchProgress.total})
+                </p>
+                <p className="text-xs text-zinc-400">
+                  Saving original high-resolution photos to database...
+                </p>
+              </div>
+            </div>
+            <div className="w-full sm:w-48 bg-zinc-950 h-3 rounded-full overflow-hidden border border-zinc-800">
+              <div 
+                className="bg-gold h-full transition-all duration-300 rounded-full"
+                style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* --- 1. HERO SLIDE COMPONENT --- */}
         {currentExcerpt ? (
           <div 
@@ -458,7 +516,7 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeIndex}
-                initial={{ opacity: 0, scale: 1.05 }}
+                initial={{ opacity: 0, scale: 1.03 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -467,41 +525,52 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                 <img 
                   src={currentExcerpt.imageUrl} 
                   alt={currentExcerpt.category || "Excerpt background"} 
-                  className="w-full h-full object-cover filter brightness-[0.7] saturate-[0.8]"
+                  className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
-                {/* Visual Gradients overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/30" />
+                {/* Subtle dark gradient overlay for text legibility without altering the image */}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/20" />
                 <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-transparent to-transparent hidden md:block" />
               </motion.div>
             </AnimatePresence>
 
             {/* Content Floating inside slider */}
             <div className="absolute inset-0 flex flex-col justify-between p-8 md:p-16 z-20">
-              {/* Category tag & Admin Controls */}
+              {/* Category tag & View / Admin Controls */}
               <div className="flex justify-between items-center">
                 <span className="bg-zinc-950/80 backdrop-blur-md border border-zinc-800 text-gold text-xs font-mono uppercase tracking-widest px-4 py-2 rounded-full">
                   {currentExcerpt.category || "Word of Wisdom"}
                 </span>
 
-                {isAdmin && currentExcerpt.id && (
-                  <div className="flex items-center gap-2 bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-1.5 rounded-full">
-                    <button
-                      onClick={() => openEditForm(currentExcerpt)}
-                      className="p-2 text-zinc-400 hover:text-gold transition-colors rounded-full hover:bg-zinc-900"
-                      title="Edit Excerpt"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(currentExcerpt.id!)}
-                      className="p-2 text-zinc-400 hover:text-red-500 transition-colors rounded-full hover:bg-zinc-900"
-                      title="Delete Excerpt"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-1.5 rounded-full">
+                  <button
+                    onClick={() => setLightboxIndex(activeIndex)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-300 hover:text-gold transition-colors rounded-full hover:bg-zinc-900 font-medium cursor-pointer"
+                    title="View Original High-Res Photo"
+                  >
+                    <Maximize2 className="w-4 h-4 text-gold" />
+                    <span className="hidden sm:inline">View Photo</span>
+                  </button>
+
+                  {isAdmin && currentExcerpt.id && (
+                    <>
+                      <button
+                        onClick={() => openEditForm(currentExcerpt)}
+                        className="p-2 text-zinc-400 hover:text-gold transition-colors rounded-full hover:bg-zinc-900 cursor-pointer"
+                        title="Edit Excerpt & Photo"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(currentExcerpt.id!)}
+                        className="p-2 text-zinc-400 hover:text-red-500 transition-colors rounded-full hover:bg-zinc-900 cursor-pointer"
+                        title="Delete Excerpt & Photo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Central text quote with staggered animations */}
@@ -542,12 +611,14 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                   <button
                     onClick={handlePrev}
                     className="p-3 bg-zinc-950/55 backdrop-blur-md border border-zinc-800 text-white rounded-full hover:bg-gold hover:text-zinc-950 transition-all cursor-pointer"
+                    title="Previous Photo"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button
                     onClick={handleNext}
                     className="p-3 bg-zinc-950/55 backdrop-blur-md border border-zinc-800 text-white rounded-full hover:bg-gold hover:text-zinc-950 transition-all cursor-pointer"
+                    title="Next Photo"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
@@ -578,46 +649,91 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
         {/* --- 2. THE PHOTO GRID GALLERY PANEL --- */}
         {filteredExcerpts.length > 0 && (
           <div className="mt-16">
-            <h3 className="text-lg font-mono uppercase text-zinc-500 tracking-widest mb-6 flex items-center gap-2">
-              <span className="w-2 h-2 bg-gold rounded-full animate-ping" />
-              Interactive Catalog
-            </h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-mono uppercase text-zinc-500 tracking-widest flex items-center gap-2">
+                <span className="w-2 h-2 bg-gold rounded-full animate-ping" />
+                Interactive Photo Catalog ({filteredExcerpts.length} Images)
+              </h3>
+              <p className="text-xs text-zinc-500 font-sans hidden sm:block">
+                Click any photo to view full-screen, edit or manage
+              </p>
+            </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {filteredExcerpts.map((item, idx) => (
                 <div
                   key={item.id || idx}
-                  onClick={() => handleSelectSlide(idx)}
                   className={`group/card relative aspect-[4/3] rounded-2xl overflow-hidden border cursor-pointer transition-all duration-500 ${
                     idx === activeIndex 
                       ? 'border-gold shadow-lg shadow-gold/10 ring-2 ring-gold/20' 
                       : 'border-zinc-800 hover:border-zinc-700'
                   }`}
+                  onClick={() => handleSelectSlide(idx)}
                 >
                   <img
                     src={item.imageUrl}
-                    alt={item.category}
-                    className={`w-full h-full object-cover transition-transform duration-700 ${
-                      idx === activeIndex ? 'scale-105 filter brightness-100' : 'scale-100 group-hover/card:scale-110 filter brightness-[0.6] group-hover/card:brightness-[0.9]'
-                    }`}
+                    alt={item.category || "Gallery Photo"}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105"
                     referrerPolicy="no-referrer"
                   />
                   
-                  {/* Subtle hover gradient and overlay text */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent flex flex-col justify-end p-4">
-                    <span className="text-[10px] font-mono text-gold uppercase tracking-wider mb-1">
-                      {item.category || "Revelation"}
-                    </span>
-                    <h4 className="text-white text-xs md:text-sm font-semibold truncate group-hover/card:text-gold transition-colors">
-                      {item.text}
-                    </h4>
-                    <p className="text-zinc-400 text-[10px] truncate mt-0.5">
-                      {item.source}
-                    </p>
+                  {/* Hover Overlay with Action Buttons */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent flex flex-col justify-between p-4 opacity-90 group-hover/card:opacity-100 transition-opacity">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[10px] font-mono bg-zinc-950/80 text-gold uppercase tracking-wider px-2.5 py-1 rounded-full border border-zinc-800">
+                        {item.category || "Revelation"}
+                      </span>
+
+                      <div className="flex items-center gap-1.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLightboxIndex(idx);
+                          }}
+                          className="p-1.5 bg-zinc-950/90 text-white hover:text-gold rounded-full border border-zinc-800 hover:bg-zinc-900 transition-colors cursor-pointer"
+                          title="View Original High-Res Photo"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        {isAdmin && item.id && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditForm(item);
+                              }}
+                              className="p-1.5 bg-zinc-950/90 text-white hover:text-gold rounded-full border border-zinc-800 hover:bg-zinc-900 transition-colors cursor-pointer"
+                              title="Edit Photo"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(item.id!);
+                              }}
+                              className="p-1.5 bg-zinc-950/90 text-white hover:text-red-400 rounded-full border border-zinc-800 hover:bg-zinc-900 transition-colors cursor-pointer"
+                              title="Delete Photo"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-white text-xs md:text-sm font-semibold truncate group-hover/card:text-gold transition-colors">
+                        {item.text}
+                      </h4>
+                      <p className="text-zinc-400 text-[10px] truncate mt-0.5">
+                        {item.source}
+                      </p>
+                    </div>
                   </div>
 
                   {idx === activeIndex && (
-                    <div className="absolute top-3 right-3 bg-gold text-zinc-950 p-1 rounded-full shadow-lg">
+                    <div className="absolute top-3 right-3 bg-gold text-zinc-950 p-1 rounded-full shadow-lg z-10">
                       <Check className="w-3 h-3 stroke-[3]" />
                     </div>
                   )}
@@ -626,6 +742,104 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
             </div>
           </div>
         )}
+
+        {/* --- FULLSCREEN LIGHTBOX PHOTO VIEWER MODAL --- */}
+        <AnimatePresence>
+          {lightboxIndex !== null && filteredExcerpts[lightboxIndex] && (
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-8 bg-black/95 backdrop-blur-xl">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="relative max-w-6xl w-full h-[90vh] flex flex-col justify-between items-center overflow-hidden"
+              >
+                {/* Lightbox Header Bar */}
+                <div className="w-full flex items-center justify-between p-4 bg-zinc-950/80 backdrop-blur-md rounded-2xl border border-zinc-800/80 z-20">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono text-gold uppercase px-3 py-1 rounded-full bg-gold/10 border border-gold/20">
+                      {filteredExcerpts[lightboxIndex].category || "Original Gallery View"}
+                    </span>
+                    <span className="text-xs text-zinc-400 font-mono hidden sm:inline">
+                      Photo {lightboxIndex + 1} of {filteredExcerpts.length}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {isAdmin && filteredExcerpts[lightboxIndex].id && (
+                      <>
+                        <button
+                          onClick={() => {
+                            const itemToEdit = filteredExcerpts[lightboxIndex];
+                            setLightboxIndex(null);
+                            openEditForm(itemToEdit);
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-300 hover:text-gold bg-zinc-900 border border-zinc-800 rounded-full transition-all cursor-pointer"
+                        >
+                          <Edit2 size={14} /> <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const itemId = filteredExcerpts[lightboxIndex].id;
+                            if (itemId) {
+                              handleDelete(itemId);
+                              setLightboxIndex(null);
+                            }
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 bg-zinc-900 border border-zinc-800 rounded-full transition-all cursor-pointer"
+                        >
+                          <Trash2 size={14} /> <span>Delete</span>
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => setLightboxIndex(null)}
+                      className="p-2 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
+                      title="Close Lightbox"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Original Image View */}
+                <div className="relative flex-1 w-full flex items-center justify-center p-4 my-2 overflow-hidden">
+                  <img
+                    src={filteredExcerpts[lightboxIndex].imageUrl}
+                    alt={filteredExcerpts[lightboxIndex].category || "Original Photo"}
+                    className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                    referrerPolicy="no-referrer"
+                  />
+
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={() => setLightboxIndex((prev) => (prev !== null ? (prev - 1 + filteredExcerpts.length) % filteredExcerpts.length : 0))}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 p-3 bg-zinc-950/80 border border-zinc-800 text-white rounded-full hover:bg-gold hover:text-zinc-950 transition-all cursor-pointer shadow-2xl"
+                    title="Previous Photo"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button
+                    onClick={() => setLightboxIndex((prev) => (prev !== null ? (prev + 1) % filteredExcerpts.length : 0))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-zinc-950/80 border border-zinc-800 text-white rounded-full hover:bg-gold hover:text-zinc-950 transition-all cursor-pointer shadow-2xl"
+                    title="Next Photo"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </div>
+
+                {/* Lightbox Footer Details */}
+                <div className="w-full p-4 bg-zinc-950/80 backdrop-blur-md rounded-2xl border border-zinc-800/80 z-20 text-center">
+                  <p className="text-white text-base sm:text-lg font-serif font-light max-w-3xl mx-auto">
+                    "{filteredExcerpts[lightboxIndex].text}"
+                  </p>
+                  <p className="text-gold text-xs font-bold uppercase tracking-wider mt-2">
+                    {filteredExcerpts[lightboxIndex].source}
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* --- 3. ADMIN DRAWER/MODAL SYSTEM --- */}
         <AnimatePresence>
@@ -742,14 +956,15 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                       <input
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={handleFileChange}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
                       <UploadCloud className={`w-8 h-8 ${isDragging ? 'text-gold animate-bounce' : 'text-zinc-500'}`} />
                       <div className="text-xs text-zinc-400 font-sans">
-                        <span className="text-gold font-semibold">Click to upload</span> or drag and drop
+                        <span className="text-gold font-semibold">Click to upload multiple images</span> or drag & drop
                       </div>
-                      <p className="text-[10px] text-zinc-600">PNG, JPG, WEBP up to 2MB</p>
+                      <p className="text-[10px] text-zinc-600">Supports selecting multiple original image files at once</p>
                     </div>
 
                     <div className="flex gap-4 items-center">

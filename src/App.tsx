@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube, Trash2, Camera, Upload } from 'lucide-react';
+import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube, Trash2, Camera, Upload, Info, Image as ImageIcon, Calendar, Headphones, BookOpen, HeartHandshake, Radio, ShieldCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { MINISTRY_NAME, LEADERS, CONTACT_INFO } from './constants';
 import GivingHub from './components/GivingHub';
@@ -66,6 +66,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAdmin: actualIsAdmin } = useAuth();
   const [dragActive, setDragActive] = useState(false);
+  const [aboutLightboxUrl, setAboutLightboxUrl] = useState<string | null>(null);
 
   const handleAboutImageUpload = (file: File, section: PageSection) => {
     if (!file.type.startsWith('image/')) {
@@ -74,47 +75,21 @@ export default function App() {
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       if (event.target?.result) {
-        const img = new Image();
-        img.src = event.target.result as string;
-        img.onload = async () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          const maxDimension = 1200;
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
-            } else {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            alert('Could not process image.');
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          try {
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-            await firebaseService.upsertSection({
-              ...section,
-              imageUrl: compressedDataUrl
-            });
-          } catch (e) {
-            alert('Image constraints prevented saving.');
-          }
-        };
+        try {
+          const rawDataUrl = event.target.result as string;
+          await firebaseService.upsertSection({
+            ...section,
+            imageUrl: rawDataUrl
+          });
+        } catch (e) {
+          alert('Failed to save image.');
+        }
       }
+    };
+    reader.onerror = () => {
+      alert('Error reading image file.');
     };
     reader.readAsDataURL(file);
   };
@@ -128,7 +103,7 @@ export default function App() {
     }
   };
   
-  // Interactive sandbox Edit Mode. Initialized to true for frictionless editing/uploading.
+  // Interactive Edit Mode - strictly restricted to authenticated actualIsAdmin users
   const [isEditMode, setIsEditMode] = useState(() => {
     const saved = localStorage.getItem('is_edit_mode');
     return saved !== null ? saved === 'true' : true;
@@ -137,19 +112,24 @@ export default function App() {
   useEffect(() => {
     if (actualIsAdmin) {
       setIsEditMode(true);
+    } else {
+      setIsEditMode(false);
     }
   }, [actualIsAdmin]);
 
   const toggleEditMode = () => {
+    if (!actualIsAdmin) return;
     const nextVal = !isEditMode;
     setIsEditMode(nextVal);
     localStorage.setItem('is_edit_mode', String(nextVal));
   };
 
+  // effectiveIsAdmin is true ONLY if user is authenticated admin AND edit mode is enabled
+  const effectiveIsAdmin = actualIsAdmin && isEditMode;
+
   const [sections, setSections] = useState<PageSection[]>([]);
-  const [isAddingSection, setIsAddingSection] = useState(false);
   const [showPortal, setShowPortal] = useState(() => {
-    return localStorage.getItem('show_portal') === 'true';
+    return localStorage.getItem('show_portal') === 'true' || actualIsAdmin;
   });
 
   useEffect(() => {
@@ -157,7 +137,6 @@ export default function App() {
     if (params.get('portal') === 'true' || params.get('admin') === 'true') {
       localStorage.setItem('show_portal', 'true');
       setShowPortal(true);
-      // Clean up URL parameters to keep the browser address bar clean
       const url = new URL(window.location.href);
       url.searchParams.delete('portal');
       url.searchParams.delete('admin');
@@ -167,7 +146,6 @@ export default function App() {
 
   useEffect(() => {
     const unsub = firebaseService.subscribeSections((data) => {
-      // Automatically correct "Porche" to "Porch" in title, subtitle, or content
       const correctedData = data.map(section => {
         let changed = false;
         let title = section.title;
@@ -199,15 +177,14 @@ export default function App() {
           changed = true;
         }
 
-        if (changed && isEditMode) {
+        if (changed && effectiveIsAdmin) {
           firebaseService.upsertSection({ ...section, title, subtitle, content });
         }
 
         return { ...section, title, subtitle, content };
       });
 
-      if (correctedData.length === 0 && isEditMode) {
-        // Initial bootstrap if empty
+      if (correctedData.length === 0 && effectiveIsAdmin) {
         const initial: PageSection[] = [
           { 
             sectionId: 'hero', 
@@ -229,8 +206,7 @@ export default function App() {
         initial.forEach(s => firebaseService.upsertSection(s));
       }
 
-      // Auto-migrate hero and about sections for the new image / text
-      if (isEditMode && correctedData.length > 0) {
+      if (effectiveIsAdmin && correctedData.length > 0) {
         const heroSec = correctedData.find(s => s.sectionId === 'hero');
         if (heroSec && (heroSec.title.toLowerCase().includes('illuminating') || heroSec.title === 'New Section')) {
           heroSec.title = "Redefining the destinies of men through His Glorious Light";
@@ -238,34 +214,33 @@ export default function App() {
         }
 
         const aboutSec = correctedData.find(s => s.sectionId === 'about');
-        if (aboutSec && (!aboutSec.imageUrl || aboutSec.imageUrl.includes('unsplash.com'))) {
+        if (aboutSec && (!aboutSec.imageUrl || aboutSec.imageUrl.includes('unsplash'))) {
           aboutSec.imageUrl = "/images/prophet_japhet_portrait.jpg";
           firebaseService.upsertSection(aboutSec);
         }
       }
 
-      // Filter to only allow core sections
       setSections(correctedData.filter(s => ['hero', 'about'].includes(s.sectionId)).sort((a, b) => (a.order || 0) - (b.order || 0)));
     });
     return () => unsub();
-  }, [isEditMode]);
+  }, [effectiveIsAdmin]);
 
   return (
     <div className="min-h-screen">
-      {/* Interactive Sandbox Admin Control Bar */}
-      <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-3 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-2.5 rounded-full shadow-2xl">
-        <button
-          onClick={toggleEditMode}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all cursor-pointer ${
-            isEditMode 
-              ? 'bg-gold text-zinc-950 font-bold shadow-[0_0_15px_rgba(212,175,55,0.3)]' 
-              : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
-          }`}
-        >
-          <Sparkles className={`w-3.5 h-3.5 ${isEditMode ? 'animate-pulse text-zinc-950' : 'text-gold'}`} />
-          <span>{isEditMode ? 'Edit Mode: Active' : 'Edit Mode: Inactive'}</span>
-        </button>
-        {actualIsAdmin && (
+      {/* Admin Floating Control Bar - Rendered strictly for authenticated actualIsAdmin users ONLY */}
+      {actualIsAdmin && (
+        <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-3 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-2.5 rounded-full shadow-2xl">
+          <button
+            onClick={toggleEditMode}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all cursor-pointer ${
+              isEditMode 
+                ? 'bg-gold text-zinc-950 font-bold shadow-[0_0_15px_rgba(212,175,55,0.3)]' 
+                : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+            }`}
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isEditMode ? 'animate-pulse text-zinc-950' : 'text-gold'}`} />
+            <span>{isEditMode ? 'Edit Mode: Active' : 'Edit Mode: Inactive'}</span>
+          </button>
           <button 
             onClick={logout}
             className="p-2.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
@@ -273,16 +248,16 @@ export default function App() {
           >
             <LogOut size={16} />
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Navigation */}
+      {/* Navigation Header */}
       <nav className="fixed top-0 w-full z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-lg font-bold tracking-tighter text-white glow-text">{MINISTRY_NAME}</span>
+          <a href="#" className="flex flex-col group">
+            <span className="text-lg font-bold tracking-tighter text-white glow-text group-hover:text-gold transition-colors">{MINISTRY_NAME}</span>
             <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Excellence & Revelation</span>
-          </div>
+          </a>
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <a href="#about" className="hover:text-gold transition-colors">About Us</a>
@@ -292,53 +267,145 @@ export default function App() {
             <a href="#blog" className="hover:text-gold transition-colors">Gazette</a>
             <a href="#giving" className="hover:text-gold transition-colors">Giving</a>
             <a href="#contact" className="hover:text-gold transition-colors">Contact</a>
-            <button className="bg-zinc-100 text-zinc-950 px-5 py-2.5 rounded-full font-bold hover:bg-gold hover:text-white transition-all cursor-pointer">
+            <a href="#live" className="bg-zinc-100 text-zinc-950 px-5 py-2.5 rounded-full font-bold hover:bg-gold hover:text-white transition-all cursor-pointer">
               Live Service
-            </button>
+            </a>
           </div>
 
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X /> : <Menu />}
+          {/* Mobile Menu Button */}
+          <button 
+            className="md:hidden flex items-center justify-center p-2.5 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition-all cursor-pointer" 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {isMenuOpen ? <X size={22} className="text-gold" /> : <Menu size={22} />}
           </button>
         </div>
+
+        {/* Responsive Mobile Dropdown Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="md:hidden border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 flex flex-col gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm font-medium">
+                  <a 
+                    href="#about" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-gold/50 hover:bg-zinc-900 text-zinc-200 hover:text-gold transition-all"
+                  >
+                    <Info size={18} className="text-gold shrink-0" />
+                    <span>About Us</span>
+                  </a>
+                  <a 
+                    href="#gallery" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-gold/50 hover:bg-zinc-900 text-zinc-200 hover:text-gold transition-all"
+                  >
+                    <ImageIcon size={18} className="text-gold shrink-0" />
+                    <span>Gallery</span>
+                  </a>
+                  <a 
+                    href="#calendar" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-gold/50 hover:bg-zinc-900 text-zinc-200 hover:text-gold transition-all"
+                  >
+                    <Calendar size={18} className="text-gold shrink-0" />
+                    <span>Calendar</span>
+                  </a>
+                  <a 
+                    href="#sermons" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-gold/50 hover:bg-zinc-900 text-zinc-200 hover:text-gold transition-all"
+                  >
+                    <Headphones size={18} className="text-gold shrink-0" />
+                    <span>Audio Sermons</span>
+                  </a>
+                  <a 
+                    href="#blog" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-gold/50 hover:bg-zinc-900 text-zinc-200 hover:text-gold transition-all"
+                  >
+                    <BookOpen size={18} className="text-gold shrink-0" />
+                    <span>Gazette & Articles</span>
+                  </a>
+                  <a 
+                    href="#giving" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-gold/50 hover:bg-zinc-900 text-zinc-200 hover:text-gold transition-all"
+                  >
+                    <HeartHandshake size={18} className="text-gold shrink-0" />
+                    <span>Giving Hub</span>
+                  </a>
+                  <a 
+                    href="#contact" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-gold/50 hover:bg-zinc-900 text-zinc-200 hover:text-gold transition-all"
+                  >
+                    <Mail size={18} className="text-gold shrink-0" />
+                    <span>Contact Us</span>
+                  </a>
+                </div>
+
+                <div className="pt-2 border-t border-zinc-900/80 flex flex-col gap-2">
+                  <a 
+                    href="#live" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-zinc-950 font-bold rounded-xl shadow-lg hover:brightness-110 transition-all text-center text-sm"
+                  >
+                    <Radio size={16} className="animate-pulse" /> Live Service
+                  </a>
+
+                  {actualIsAdmin ? (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-gold/30">
+                      <div className="flex items-center gap-2 text-xs text-gold font-bold">
+                        <ShieldCheck size={16} /> Admin Authenticated
+                      </div>
+                      <button 
+                        onClick={() => { logout(); setIsMenuOpen(false); }}
+                        className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-semibold cursor-pointer"
+                      >
+                        <LogOut size={14} /> Logout
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => { login(); setIsMenuOpen(false); }}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-gold border border-zinc-800 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      <LogIn size={15} /> Staff & Admin Portal Sign In
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      {/* Sidebar Mobile Menu */}
+      {/* Backdrop Overlay for Mobile Dropdown */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            className="fixed inset-0 z-[60] bg-zinc-950 p-8 flex flex-col gap-8 md:hidden"
-          >
-            <button onClick={() => setIsMenuOpen(false)} className="self-end"><X size={32} /></button>
-            <div className="flex flex-col gap-6 text-2xl font-serif">
-              <a href="#about" onClick={() => setIsMenuOpen(false)}>About Us</a>
-              <a href="#gallery" onClick={() => setIsMenuOpen(false)}>Gallery</a>
-              <a href="#calendar" onClick={() => setIsMenuOpen(false)}>Calendar</a>
-              <a href="#sermons" onClick={() => setIsMenuOpen(false)}>Sermons</a>
-              <a href="#blog" onClick={() => setIsMenuOpen(false)}>Gazette</a>
-              <a href="#giving" onClick={() => setIsMenuOpen(false)}>Giving</a>
-              <a href="#contact" onClick={() => setIsMenuOpen(false)}>Contact</a>
-            </div>
-            {!user && (
-              <button 
-                onClick={() => { login(); setIsMenuOpen(false); }}
-                className="mt-auto flex items-center gap-2 text-zinc-500 border-t border-zinc-900 pt-6"
-              >
-                <LogIn size={20} /> Admin Access
-              </button>
-            )}
-          </motion.div>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMenuOpen(false)}
+            className="fixed inset-0 top-20 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          />
         )}
       </AnimatePresence>
 
       {/* Dynamic Sections */}
       <main>
-        <LiveStreamHero isAdmin={isEditMode} />
+        <LiveStreamHero isAdmin={effectiveIsAdmin} />
         {sections.map((section) => (
-          <EditableSection key={section.sectionId} section={section} isAdmin={isEditMode}>
+          <EditableSection key={section.sectionId} section={section} isAdmin={effectiveIsAdmin}>
             {section.sectionId === 'hero' ? (
               <header className="relative pt-48 pb-24 px-6 min-h-[90vh] flex flex-col items-center justify-center text-center overflow-hidden">
                 <div className="absolute inset-0 glow-bg -z-10" />
@@ -370,8 +437,8 @@ export default function App() {
               </header>
             ) : section.sectionId === 'about' ? (
               <section id="about" className="py-24 px-6 border-y border-zinc-900 bg-zinc-950/50">
-                <div className={`max-w-6xl mx-auto ${section.imageUrl || isEditMode ? 'grid md:grid-cols-2 gap-16 items-center' : 'max-w-3xl text-center'}`}>
-                  {(section.imageUrl || isEditMode) && (
+                <div className={`max-w-6xl mx-auto ${section.imageUrl || effectiveIsAdmin ? 'grid md:grid-cols-2 gap-16 items-center' : 'max-w-3xl text-center'}`}>
+                  {(section.imageUrl || effectiveIsAdmin) && (
                     <div 
                       className={`relative aspect-[4/5] rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900 ${
                         dragActive 
@@ -393,29 +460,44 @@ export default function App() {
                           <img 
                             src={section.imageUrl} 
                             alt="Ministry" 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110"
+                            onClick={() => setAboutLightboxUrl(section.imageUrl!)}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105 cursor-pointer"
+                            title="Click to view original photo full screen"
                             referrerPolicy="no-referrer"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none" />
                           
                           {/* Admin Overlay Controls directly on image */}
-                          {isEditMode && (
+                          {effectiveIsAdmin && (
                             <div className="absolute inset-0 flex flex-col justify-between p-6 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity z-10">
                               <div className="flex justify-between items-start">
                                 <span className="bg-zinc-950/90 text-gold text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-zinc-800">
                                   About Image
                                 </span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAboutImageDelete(section);
-                                  }}
-                                  className="p-2.5 bg-red-950/90 hover:bg-red-600 border border-red-500/30 text-red-200 hover:text-white rounded-full transition-all cursor-pointer shadow-lg hover:scale-105"
-                                  title="Delete Image"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAboutLightboxUrl(section.imageUrl!);
+                                    }}
+                                    className="p-2.5 bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-gold rounded-full transition-all cursor-pointer shadow-lg hover:scale-105"
+                                    title="View Original Photo"
+                                  >
+                                    <ImageIcon className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAboutImageDelete(section);
+                                    }}
+                                    className="p-2.5 bg-red-950/90 hover:bg-red-600 border border-red-500/30 text-red-200 hover:text-white rounded-full transition-all cursor-pointer shadow-lg hover:scale-105"
+                                    title="Delete Image"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </div>
                               <div className="flex justify-center">
                                 <label className="flex items-center gap-2 px-5 py-3 bg-gold hover:bg-amber-500 text-zinc-950 font-bold text-xs rounded-full cursor-pointer shadow-xl hover:scale-105 active:scale-95 transition-all">
@@ -438,7 +520,7 @@ export default function App() {
                         </>
                       ) : (
                         /* Empty/Deleted State (Only visible to admin to upload) */
-                        isEditMode && (
+                        effectiveIsAdmin && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-zinc-800 hover:border-gold/50 rounded-3xl transition-all animate-pulse">
                             <div className="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center mb-4 text-zinc-500">
                               <Upload className="w-8 h-8" />
@@ -464,7 +546,7 @@ export default function App() {
                       )}
                     </div>
                   )}
-                  <div className={section.imageUrl || isEditMode ? '' : 'max-w-3xl mx-auto'}>
+                  <div className={section.imageUrl || effectiveIsAdmin ? '' : 'max-w-3xl mx-auto'}>
                     <h2 className="text-4xl md:text-5xl font-serif mb-8 glow-text">{section.title}</h2>
                     <div className="prose prose-invert max-w-none text-zinc-400 text-lg leading-relaxed space-y-6">
                       <Markdown>{section.content}</Markdown>
@@ -489,15 +571,15 @@ export default function App() {
         ))}
       </main>
 
-      <ExcerptGallery isAdmin={isEditMode} />
+      <ExcerptGallery isAdmin={effectiveIsAdmin} />
 
-      <EventsCalendar isAdmin={isEditMode} />
+      <EventsCalendar isAdmin={effectiveIsAdmin} />
 
-      <AudioSermons isAdmin={isEditMode} />
+      <AudioSermons isAdmin={effectiveIsAdmin} />
 
-      <Blog isAdmin={isEditMode} />
+      <Blog isAdmin={effectiveIsAdmin} />
 
-      <PrayerSystem isAdmin={isEditMode} />
+      <PrayerSystem isAdmin={effectiveIsAdmin} />
 
       <GivingHub />
 
@@ -553,23 +635,53 @@ export default function App() {
             <a href={CONTACT_INFO.youtube} target="_blank" rel="noreferrer" className="hover:text-gold transition-colors flex items-center gap-1">
               <Youtube size={12} /> YouTube
             </a>
-            {showPortal && (
-              !user ? (
-                <button 
-                  onClick={login}
-                  className="hover:text-gold transition-colors cursor-pointer flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity"
-                >
-                  <LogIn size={12} /> Staff Portal
-                </button>
-              ) : (
-                <span className="text-gold flex items-center gap-1 animate-pulse">
-                  <Sparkles size={14} /> Admin Active
-                </span>
-              )
+            {!actualIsAdmin ? (
+              <button 
+                onClick={login}
+                className="hover:text-gold transition-colors cursor-pointer flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity"
+              >
+                <LogIn size={12} /> Staff Portal
+              </button>
+            ) : (
+              <span className="text-gold flex items-center gap-1 animate-pulse">
+                <Sparkles size={14} /> Admin Active ({user?.email})
+              </span>
             )}
           </div>
         </div>
       </footer>
+      {/* Lightbox Modal for About Section Photo */}
+      <AnimatePresence>
+        {aboutLightboxUrl && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 sm:p-8 bg-black/95 backdrop-blur-2xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-between"
+            >
+              <div className="w-full flex justify-between items-center p-4 bg-zinc-950/80 border border-zinc-800 rounded-2xl mb-4">
+                <span className="text-xs font-mono text-gold uppercase tracking-wider">About Section Original Photo</span>
+                <button
+                  onClick={() => setAboutLightboxUrl(null)}
+                  className="p-2 text-zinc-400 hover:text-white bg-zinc-900 rounded-full transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="relative flex-1 w-full flex items-center justify-center overflow-hidden p-2">
+                <img
+                  src={aboutLightboxUrl}
+                  alt="Original About Photo"
+                  className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-zinc-800"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

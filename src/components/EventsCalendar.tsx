@@ -14,7 +14,11 @@ import {
   Check, 
   X, 
   AlertTriangle,
-  Info
+  Info,
+  UploadCloud,
+  Eye,
+  Maximize2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { firebaseService, ChurchEvent } from '../lib/firebaseService';
 
@@ -48,6 +52,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
   // Modal states
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ChurchEvent | null>(null);
+  const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
   
   // Form states
   const [formTitle, setFormTitle] = useState('');
@@ -60,6 +65,26 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // Process image file preserving raw unenhanced state
+  const processEventImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setFormError('Please select a valid image file (PNG, JPG, WEBP, etc.)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setFormImageUrl(event.target.result as string);
+        setFormError('');
+      }
+    };
+    reader.onerror = () => {
+      setFormError('Failed to read image file.');
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Fetch events from Firestore
   useEffect(() => {
@@ -586,15 +611,22 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
                           </div>
                         </div>
 
-                        {/* Optional Side Banner Image */}
+                         {/* Optional Side Banner Image */}
                         {evt.imageUrl && (
-                          <div className="hidden sm:block md:w-32 aspect-square md:aspect-auto rounded-2xl overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800">
+                          <div 
+                            onClick={() => setSelectedPhotoUrl(evt.imageUrl!)}
+                            className="relative hidden sm:block md:w-32 aspect-square md:aspect-auto rounded-2xl overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800 cursor-pointer group/img shadow-md hover:border-gold/50 transition-all"
+                            title="Click to view original photo full screen"
+                          >
                             <img 
                               src={evt.imageUrl} 
                               alt={evt.title} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                              className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
                               referrerPolicy="no-referrer"
                             />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                              <Maximize2 className="w-5 h-5 text-gold" />
+                            </div>
                           </div>
                         )}
                       </motion.div>
@@ -730,15 +762,54 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
                   />
                 </div>
 
-                {/* Optional Image URL */}
-                <div className="text-left">
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold block mb-1.5">Image URL (Optional)</label>
+                {/* Optional Photo / Image Upload */}
+                <div className="text-left space-y-2">
+                  <label className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold block">Event Photo (Optional)</label>
+                  
+                  {formImageUrl ? (
+                    <div className="relative rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 group/img">
+                      <img src={formImageUrl} alt="Event Preview" className="w-full h-40 object-cover" referrerPolicy="no-referrer" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPhotoUrl(formImageUrl)}
+                          className="px-3 py-1.5 bg-zinc-900 border border-zinc-700 text-gold text-xs rounded-full flex items-center gap-1 hover:bg-zinc-800"
+                        >
+                          <Eye size={14} /> View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormImageUrl('')}
+                          className="px-3 py-1.5 bg-red-950 border border-red-800 text-red-300 text-xs rounded-full flex items-center gap-1 hover:bg-red-900"
+                        >
+                          <Trash2 size={14} /> Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-zinc-800 hover:border-gold/50 rounded-2xl p-4 text-center transition-colors">
+                      <UploadCloud className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+                      <p className="text-xs text-zinc-400 font-medium mb-2">Upload photo file or paste image URL</p>
+                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-gold border border-gold/30 rounded-xl text-xs font-bold cursor-pointer transition-all">
+                        <ImageIcon size={14} /> Upload Image File
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) processEventImageFile(e.target.files[0]);
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
+
                   <input 
                     type="url" 
                     value={formImageUrl}
                     onChange={(e) => setFormImageUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full bg-zinc-900 border border-zinc-800/80 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400 transition-colors"
+                    placeholder="Or paste image URL (https://...)"
+                    className="w-full bg-zinc-900 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-amber-400 transition-colors mt-2"
                   />
                 </div>
 
@@ -747,19 +818,52 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
                   <button 
                     type="button"
                     onClick={() => setShowFormModal(false)}
-                    className="flex-1 py-3.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-bold rounded-xl transition-all text-xs uppercase tracking-wider"
+                    className="flex-1 py-3.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-bold rounded-xl transition-all text-xs uppercase tracking-wider cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-yellow-400 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                    className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-yellow-400 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isSubmitting ? 'Saving...' : (editingEvent ? 'Save Changes' : 'Publish Event')}
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* FULLSCREEN LIGHTBOX PHOTO VIEWER FOR EVENT PHOTOS */}
+      <AnimatePresence>
+        {selectedPhotoUrl && (
+          <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 sm:p-8 bg-black/95 backdrop-blur-xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-between"
+            >
+              <div className="w-full flex justify-between items-center p-4 bg-zinc-950/80 border border-zinc-800 rounded-2xl mb-4">
+                <span className="text-xs font-mono text-gold uppercase tracking-wider">Event Photo Lightbox</span>
+                <button
+                  onClick={() => setSelectedPhotoUrl(null)}
+                  className="p-2 text-zinc-400 hover:text-white bg-zinc-900 rounded-full transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="relative flex-1 w-full flex items-center justify-center overflow-hidden p-2">
+                <img
+                  src={selectedPhotoUrl}
+                  alt="Event Photo Full View"
+                  className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-zinc-800"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
             </motion.div>
           </div>
         )}

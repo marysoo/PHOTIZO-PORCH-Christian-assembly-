@@ -89,7 +89,7 @@ export default function Blog({ isAdmin }: BlogProps) {
     }
   };
 
-  // Image Upload and Compression
+  // Image Upload - preserves 100% original form without canvas compression or AI manipulation
   const processImageFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
       setFormError('Please select a valid image file (PNG, JPG, WEBP, etc.)');
@@ -99,46 +99,8 @@ export default function Blog({ isAdmin }: BlogProps) {
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
-        const img = new Image();
-        img.src = event.target.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          // Target max resolution of 1000px for the longer edge to remain crisp and load fast
-          const maxDimension = 1000;
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
-            } else {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            setFormError('Could not compress image. Browser canvas error.');
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          // Convert to JPEG with 0.75 quality for an extremely light footprint (<100KB)
-          try {
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            setImageUrl(compressedDataUrl);
-          } catch (e) {
-            setFormError('Image security constraints prevented compression.');
-          }
-        };
-        img.onerror = () => {
-          setFormError('Failed to load image. The file may be corrupted.');
-        };
+        setImageUrl(event.target.result as string);
+        setFormError('');
       }
     };
     reader.onerror = () => {
@@ -545,12 +507,13 @@ export default function Blog({ isAdmin }: BlogProps) {
                       Publication Title
                     </label>
                     <input
-                      key={editingPost?.id || 'new'}
                       type="text"
                       placeholder="e.g. Navigating Seasons of Wilderness"
-                      defaultValue={editingPost ? editingPost.title : ''}
+                      value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       maxLength={200}
+                      dir="ltr"
+                      autoComplete="off"
                       className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/30 transition-all"
                       required
                     />
@@ -578,12 +541,13 @@ export default function Blog({ isAdmin }: BlogProps) {
                         Author Byline
                       </label>
                       <input
-                        key={editingPost?.id || 'new'}
                         type="text"
                         placeholder="e.g. Prophet Japeth Tsukwas"
-                        defaultValue={editingPost ? editingPost.author : 'Prophet Japeth Tsukwas'}
+                        value={author}
                         onChange={(e) => setAuthor(e.target.value)}
                         maxLength={100}
+                        dir="ltr"
+                        autoComplete="off"
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/30 transition-all"
                         required
                       />
@@ -596,12 +560,12 @@ export default function Blog({ isAdmin }: BlogProps) {
                       Short Summary / Teaser <span className="text-[10px] text-zinc-600 font-normal">(Optional)</span>
                     </label>
                     <textarea
-                      key={editingPost?.id || 'new'}
                       placeholder="A short teaser or hook to describe the article. If left empty, it will auto-extract from content."
-                      defaultValue={editingPost ? editingPost.summary || '' : ''}
+                      value={summary}
                       onChange={(e) => setSummary(e.target.value)}
                       maxLength={500}
                       rows={2}
+                      dir="ltr"
                       className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/30 transition-all resize-none"
                     />
                   </div>
@@ -612,11 +576,11 @@ export default function Blog({ isAdmin }: BlogProps) {
                       Main Content
                     </label>
                     <textarea
-                      key={editingPost?.id || 'new'}
                       placeholder="Write your article details here. Support linebreaks for neat paragraphs."
-                      defaultValue={editingPost ? editingPost.content : ''}
+                      value={content}
                       onChange={(e) => setContent(e.target.value)}
                       rows={8}
+                      dir="ltr"
                       className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/30 transition-all resize-y min-h-[150px]"
                       required
                     />
