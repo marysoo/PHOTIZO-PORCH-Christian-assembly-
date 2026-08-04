@@ -13,6 +13,7 @@ import { PageSection, firebaseService } from './lib/firebaseService';
 import EditableSection from './components/EditableSection';
 import ExcerptGallery from './components/ExcerptGallery';
 import Blog from './components/Blog';
+import SectionDivider from './components/SectionDivider';
 import Markdown from 'react-markdown';
 
 const renderHeroTitle = (title: string) => {
@@ -571,17 +572,31 @@ export default function App() {
         ))}
       </main>
 
+      <SectionDivider variant="beams" icon="sun" label="Photizo Light & Excerpts" />
+
       <ExcerptGallery isAdmin={effectiveIsAdmin} />
+
+      <SectionDivider variant="sacred-emblem" icon="star" label="Assembly Gatherings & Events" />
 
       <EventsCalendar isAdmin={effectiveIsAdmin} />
 
+      <SectionDivider variant="line-glow" icon="flame" label="Voice of Prophetic Revelation" />
+
       <AudioSermons isAdmin={effectiveIsAdmin} />
+
+      <SectionDivider variant="wave-glow" icon="sparkles" label="Articles & Divine Wisdom" />
 
       <Blog isAdmin={effectiveIsAdmin} />
 
+      <SectionDivider variant="beams" icon="shield" label="Prayer Altar & Testimonies" />
+
       <PrayerSystem isAdmin={effectiveIsAdmin} />
 
+      <SectionDivider variant="sacred-emblem" icon="crown" label="Seed of Faith & Kingdom Giving" />
+
       <GivingHub />
+
+      <SectionDivider variant="line-glow" icon="sparkles" label="Connect & Fellowship" />
 
       {/* Contact Section */}
       <section id="contact" className="py-24 px-6 bg-zinc-900/20">
