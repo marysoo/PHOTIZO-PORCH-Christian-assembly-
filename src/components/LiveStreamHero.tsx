@@ -61,7 +61,7 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
         </div>
 
         {/* Video Player Container */}
-        <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border border-zinc-800 bg-zinc-900 shadow-[0_0_100px_-20px_rgba(212,175,55,0.15)] group">
+        <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border border-zinc-800 bg-zinc-900 shadow-[0_0_100px_-20px_var(--theme-glow-soft,rgba(212,175,55,0.15))] group">
           {stream?.isLive ? (
             <iframe 
               className="w-full h-full"
@@ -161,7 +161,7 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
               <div className="flex gap-4 mt-10">
                 <button 
                   onClick={handleSave}
-                  className="flex-1 py-4 bg-gold text-white rounded-xl font-bold hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-4 bg-gold text-white rounded-xl font-bold hover:shadow-[0_0_20px_var(--theme-glow,rgba(212,175,55,0.3))] transition-all flex items-center justify-center gap-2"
                 >
                   <Save size={18} /> Update Broadcast
                 </button>

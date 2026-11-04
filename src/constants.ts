@@ -60,5 +60,11 @@ export const BANK_DETAILS = {
     bankAddress: "1801 Main St, MO, Kansas City, 64108",
     accountType: "Prophet's Account",
     description: "For international transfers from USA (ACH, Routing, Wire)"
+  },
+  paypal: {
+    email: "tsukwasjapheth01@gmail.com",
+    accountName: "Photizo Porch Ministry / Japheth Tsukwas",
+    accountType: "PayPal Global Giving",
+    description: "Instant and secure international giving via PayPal account or debit/credit card"
   }
 };

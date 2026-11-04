@@ -118,6 +118,22 @@
         "summary": { "type": "string" }
       },
       "required": ["title", "content", "author", "date"]
+    },
+    "Testimonial": {
+      "title": "Member Testimonial",
+      "description": "Praise reports and stories of God's miraculous deeds",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "story": { "type": "string" },
+        "category": { "type": "string" },
+        "date": { "type": "string" },
+        "location": { "type": "string" },
+        "status": { "type": "string", "enum": ["approved", "pending", "rejected"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "title", "story", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -156,6 +172,10 @@
     "/blogPosts/{postId}": {
       "schema": "BlogPost",
       "description": "Ministry articles and announcements"
+    },
+    "/testimonials/{testimonialId}": {
+      "schema": "Testimonial",
+      "description": "Member testimonies and praise reports"
     }
   }
 }

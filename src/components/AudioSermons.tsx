@@ -350,7 +350,7 @@ export default function AudioSermons({ isAdmin }: AudioSermonsProps) {
             {isAdmin && (
               <button 
                 onClick={openAddModal}
-                className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-zinc-950 font-bold px-5 py-3 rounded-full hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all text-xs uppercase tracking-wider"
+                className="flex items-center gap-2 bg-gold hover:opacity-90 text-zinc-950 font-bold px-5 py-3 rounded-full hover:shadow-[0_0_20px_var(--theme-glow,rgba(212,175,55,0.4))] transition-all text-xs uppercase tracking-wider cursor-pointer"
               >
                 <Plus size={16} /> Post Sermon Link
               </button>
@@ -427,7 +427,7 @@ export default function AudioSermons({ isAdmin }: AudioSermonsProps) {
                   layout
                   className={`relative group bg-gradient-to-br from-zinc-900/80 to-zinc-950 border rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between h-80 shadow-lg ${
                     isCurrent 
-                      ? 'border-amber-400/60 shadow-[0_0_25px_rgba(212,175,55,0.05)]' 
+                      ? 'border-gold/60 shadow-[0_0_25px_var(--theme-glow-soft,rgba(212,175,55,0.05))]' 
                       : 'border-zinc-900 hover:border-zinc-800/80'
                   }`}
                 >
@@ -787,7 +787,7 @@ export default function AudioSermons({ isAdmin }: AudioSermonsProps) {
                   <button 
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-yellow-400 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                    className="flex-1 py-3.5 bg-gold disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold rounded-xl hover:shadow-[0_0_20px_var(--theme-glow,rgba(212,175,55,0.4))] transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isSubmitting ? 'Saving...' : (editingSermon ? 'Save Changes' : 'Publish Sermon')}
                   </button>

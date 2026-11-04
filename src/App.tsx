@@ -14,7 +14,9 @@ import EditableSection from './components/EditableSection';
 import ExcerptGallery from './components/ExcerptGallery';
 import Blog from './components/Blog';
 import SectionDivider from './components/SectionDivider';
+import TestimonialCarousel from './components/TestimonialCarousel';
 import Markdown from 'react-markdown';
+import ThemeSwitcher from './components/ThemeSwitcher';
 
 const renderHeroTitle = (title: string) => {
   let displayTitle = title;
@@ -26,21 +28,42 @@ const renderHeroTitle = (title: string) => {
     const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").toLowerCase();
     if (cleanWord === 'destinies') {
       return (
-        <span key={i} className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 font-extrabold italic drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+        <span 
+          key={i} 
+          className="inline-block text-transparent bg-clip-text font-extrabold italic"
+          style={{
+            backgroundImage: 'linear-gradient(to right, var(--theme-secondary, #F59E0B), var(--theme-light, #FEF08A), var(--theme-primary, #D4AF37))',
+            filter: 'drop-shadow(0 0 16px var(--theme-glow, rgba(212,175,55,0.4)))'
+          }}
+        >
           {word}{' '}
         </span>
       );
     }
     if (cleanWord === 'glorious') {
       return (
-        <span key={i} className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-amber-200 font-semibold tracking-wide drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+        <span 
+          key={i} 
+          className="inline-block text-transparent bg-clip-text font-semibold tracking-wide"
+          style={{
+            backgroundImage: 'linear-gradient(to right, var(--theme-primary, #D4AF37), var(--theme-secondary, #F59E0B), var(--theme-light, #FEF08A))',
+            filter: 'drop-shadow(0 0 12px var(--theme-glow, rgba(245,158,11,0.4)))'
+          }}
+        >
           {word}{' '}
         </span>
       );
     }
     if (cleanWord === 'light') {
       return (
-        <span key={i} className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-white to-amber-100 font-extrabold tracking-tight glow-text drop-shadow-[0_0_25px_rgba(255,255,255,0.8)]">
+        <span 
+          key={i} 
+          className="inline-block text-transparent bg-clip-text font-extrabold tracking-tight glow-text"
+          style={{
+            backgroundImage: 'linear-gradient(to right, var(--theme-light, #FEF08A), #FFFFFF, var(--theme-light, #FEF08A))',
+            filter: 'drop-shadow(0 0 25px var(--theme-glow, rgba(255,255,255,0.8)))'
+          }}
+        >
           {word}{' '}
         </span>
       );
@@ -54,7 +77,11 @@ const renderHeroTitle = (title: string) => {
     }
     if (cleanWord === 'soul') {
       return (
-        <span key={i} className="text-gold italic glow-text font-serif">
+        <span 
+          key={i} 
+          className="italic glow-text font-serif"
+          style={{ color: 'var(--theme-primary, #D4AF37)' }}
+        >
           {word}{' '}
         </span>
       );
@@ -201,7 +228,7 @@ export default function App() {
             subtitle: 'Enlightening hearts with the knowledge of God\'s glory.',
             content: "Photizo Porch Christian Assembly is more than a church; it is a portal of divine illumination. Our name, derived from the Greek 'Photizo,' signifies our sacred mandate to enlighten hearts and manifest kingdom excellence.\n\nUnder the leadership of Prophet Japeth Tsukwas, we are building a global community dedicated to supernatural manifestations and purposeful living.",
             order: 1,
-            imageUrl: "/images/prophet_japhet_portrait.jpg"
+            imageUrl: ""
           }
         ];
         initial.forEach(s => firebaseService.upsertSection(s));
@@ -215,8 +242,8 @@ export default function App() {
         }
 
         const aboutSec = correctedData.find(s => s.sectionId === 'about');
-        if (aboutSec && (!aboutSec.imageUrl || aboutSec.imageUrl.includes('unsplash'))) {
-          aboutSec.imageUrl = "/images/prophet_japhet_portrait.jpg";
+        if (aboutSec && aboutSec.imageUrl && (aboutSec.imageUrl.includes('prophet_japhet') || aboutSec.imageUrl.includes('humanitarian'))) {
+          aboutSec.imageUrl = "";
           firebaseService.upsertSection(aboutSec);
         }
       }
@@ -235,7 +262,7 @@ export default function App() {
             onClick={toggleEditMode}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all cursor-pointer ${
               isEditMode 
-                ? 'bg-gold text-zinc-950 font-bold shadow-[0_0_15px_rgba(212,175,55,0.3)]' 
+                ? 'bg-gold text-zinc-950 font-bold shadow-[0_0_15px_var(--theme-glow,rgba(212,175,55,0.3))]' 
                 : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
             }`}
           >
@@ -260,27 +287,34 @@ export default function App() {
             <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Excellence & Revelation</span>
           </a>
           
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium">
             <a href="#about" className="hover:text-gold transition-colors">About Us</a>
             <a href="#gallery" className="hover:text-gold transition-colors">Gallery</a>
             <a href="#calendar" className="hover:text-gold transition-colors">Calendar</a>
             <a href="#sermons" className="hover:text-gold transition-colors">Sermons</a>
             <a href="#blog" className="hover:text-gold transition-colors">Gazette</a>
+            <a href="#testimonies" className="hover:text-gold transition-colors">Testimonies</a>
             <a href="#giving" className="hover:text-gold transition-colors">Giving</a>
             <a href="#contact" className="hover:text-gold transition-colors">Contact</a>
+
+            <ThemeSwitcher variant="navbar" />
+
             <a href="#live" className="bg-zinc-100 text-zinc-950 px-5 py-2.5 rounded-full font-bold hover:bg-gold hover:text-white transition-all cursor-pointer">
               Live Service
             </a>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden flex items-center justify-center p-2.5 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition-all cursor-pointer" 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle navigation menu"
-          >
-            {isMenuOpen ? <X size={22} className="text-gold" /> : <Menu size={22} />}
-          </button>
+          {/* Mobile Right Controls: Theme Quick Switcher + Hamburger Menu Button */}
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeSwitcher variant="navbar" />
+            <button 
+              className="flex items-center justify-center p-2.5 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition-all cursor-pointer" 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle navigation menu"
+            >
+              {isMenuOpen ? <X size={22} className="text-gold" /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
 
         {/* Responsive Mobile Dropdown Menu */}
@@ -294,6 +328,9 @@ export default function App() {
               className="md:hidden border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
             >
               <div className="p-6 flex flex-col gap-3">
+                {/* Mobile Theme Palette Selector */}
+                <ThemeSwitcher variant="mobile-inline" className="mb-2" />
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm font-medium">
                   <a 
                     href="#about" 
@@ -334,6 +371,14 @@ export default function App() {
                   >
                     <BookOpen size={18} className="text-gold shrink-0" />
                     <span>Gazette & Articles</span>
+                  </a>
+                  <a 
+                    href="#testimonies" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-gold/50 hover:bg-zinc-900 text-zinc-200 hover:text-gold transition-all"
+                  >
+                    <Sparkles size={18} className="text-gold shrink-0" />
+                    <span>Testimonies</span>
                   </a>
                   <a 
                     href="#giving" 
@@ -427,7 +472,7 @@ export default function App() {
                     {section.subtitle}
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="#about" className="group flex items-center gap-2 bg-gold text-white px-8 py-4 rounded-full font-bold text-lg hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all">
+                    <a href="#about" className="group flex items-center gap-2 bg-gold text-white px-8 py-4 rounded-full font-bold text-lg hover:shadow-[0_0_30px_var(--theme-glow,rgba(212,175,55,0.4))] transition-all">
                       Our Journey <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </a>
                     <a href="#giving" className="px-8 py-4 rounded-full border border-zinc-800 hover:bg-zinc-900 transition-all text-lg font-medium text-zinc-300">
@@ -443,7 +488,7 @@ export default function App() {
                     <div 
                       className={`relative aspect-[4/5] rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900 ${
                         dragActive 
-                          ? 'border-gold shadow-[0_0_25px_rgba(212,175,55,0.25)]' 
+                          ? 'border-gold shadow-[0_0_25px_var(--theme-glow-soft,rgba(212,175,55,0.25))]' 
                           : 'hover:border-zinc-700'
                       } group/img transition-all`}
                       onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
@@ -588,11 +633,15 @@ export default function App() {
 
       <Blog isAdmin={effectiveIsAdmin} />
 
-      <SectionDivider variant="beams" icon="shield" label="Prayer Altar & Testimonies" />
+      <SectionDivider variant="beams" icon="shield" label="Covenant Prayer Altar" />
 
       <PrayerSystem isAdmin={effectiveIsAdmin} />
 
-      <SectionDivider variant="sacred-emblem" icon="crown" label="Seed of Faith & Kingdom Giving" />
+      <SectionDivider variant="sacred-emblem" icon="sparkles" label="Living Testimonies of Grace" />
+
+      <TestimonialCarousel isAdmin={effectiveIsAdmin} />
+
+      <SectionDivider variant="beams" icon="crown" label="Seed of Faith & Kingdom Giving" />
 
       <GivingHub />
 
@@ -697,6 +746,9 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Persistent Floating Theme Switcher Widget */}
+      <ThemeSwitcher variant="floating" />
     </div>
   );
 }

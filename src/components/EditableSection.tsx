@@ -162,7 +162,7 @@ export default function EditableSection({ section, isAdmin, children }: Editable
               <div className="flex gap-4 mt-8">
                 <button 
                   onClick={handleSave}
-                  className="flex-1 py-3.5 bg-gold text-zinc-950 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 py-3.5 bg-gold text-zinc-950 rounded-xl font-bold hover:shadow-[0_0_20px_var(--theme-glow,rgba(212,175,55,0.3))] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Save size={18} /> Save Changes
                 </button>

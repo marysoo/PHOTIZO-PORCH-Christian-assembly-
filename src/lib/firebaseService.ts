@@ -91,6 +91,61 @@ export interface BlogPost {
   summary?: string;
 }
 
+export interface Testimonial {
+  id?: string;
+  name: string;
+  title: string;
+  story: string;
+  category: string;
+  date: string; // YYYY-MM-DD
+  location?: string;
+  status: 'approved' | 'pending' | 'rejected';
+  createdAt: string;
+}
+
+export const INITIAL_TESTIMONIALS: Omit<Testimonial, 'id'>[] = [
+  {
+    name: "Sister Deborah O.",
+    title: "Instant Healing from 4-Year Chronic Spine Affliction",
+    story: "During the prophetic ministration with Prophet Japhet, a word of knowledge went forth concerning severe nerve pain in the spine. At that precise moment, fire surged through my back and the debilitating agony vanished completely! Doctors later verified full anatomical restoration. Praise the Lord of Photizo Porch!",
+    category: "Healing & Restoration",
+    date: "2026-03-24",
+    location: "Abuja, Nigeria",
+    status: "approved",
+    createdAt: new Date(Date.now() - 86400000 * 12).toISOString()
+  },
+  {
+    name: "Brother Emmanuel T.",
+    title: "Supernatural Business Contract & Complete Debt Liquidation",
+    story: "We were facing severe legal foreclosure and financial dead-ends. Pastor Japhet prayed and declared a season of unprecedented light over my business. Within two weeks, a multinational entity reached out out of nowhere, approving a multi-million supply contract that wiped away all debt in a single day!",
+    category: "Financial Breakthrough",
+    date: "2026-04-02",
+    location: "Lagos, Nigeria",
+    status: "approved",
+    createdAt: new Date(Date.now() - 86400000 * 8).toISOString()
+  },
+  {
+    name: "Sister Grace & Bro Michael M.",
+    title: "Miracle Conception After 6 Years of Medical Impossibility",
+    story: "Specialists in the UK told us conception was biologically impossible due to extensive scarring. We held on to the prophetic mantle at Photizo Porch, faithfully standing in prayer. Today, we hold our healthy baby boy, Elijah! What God cannot do does not exist.",
+    category: "Divine Fruitfulness",
+    date: "2026-04-18",
+    location: "London, UK",
+    status: "approved",
+    createdAt: new Date(Date.now() - 86400000 * 4).toISOString()
+  },
+  {
+    name: "Minister David K.",
+    title: "Supernatural Deliverance & Prophetic Calling Activated",
+    story: "I had wrestled with recurring night oppression and heavy depression for years. Stepping into the atmosphere of worship at Photizo Porch broke the shackles instantly. A deep mantle of peace and prophetic clarity fell upon me, and my family has entered total liberty.",
+    category: "Spiritual Deliverance",
+    date: "2026-04-28",
+    location: "Makurdi, Benue",
+    status: "approved",
+    createdAt: new Date(Date.now() - 86400000 * 1).toISOString()
+  }
+];
+
 export const firebaseService = {
   // Site Settings
   async getSiteSettings(): Promise<SiteSettings | null> {
@@ -344,6 +399,82 @@ export const firebaseService = {
       await deleteDoc(doc(db, 'blogPosts', postId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
+    }
+  },
+
+  // Testimonials
+  subscribeTestimonials(callback: (testimonials: Testimonial[]) => void) {
+    const path = 'testimonials';
+    const q = query(collection(db, path));
+    return onSnapshot(q, (snap) => {
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data() } as Testimonial));
+      // Sort newest created first
+      items.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
+      callback(items);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+    });
+  },
+
+  async submitTestimonial(testimonial: Omit<Testimonial, 'id'>): Promise<string> {
+    const testimonialId = `test_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const path = `testimonials/${testimonialId}`;
+    try {
+      const cleanData = Object.fromEntries(
+        Object.entries(testimonial).filter(([_, v]) => v !== undefined)
+      );
+      await setDoc(doc(db, 'testimonials', testimonialId), cleanData);
+      return testimonialId;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  },
+
+  async updateTestimonialStatus(id: string, status: Testimonial['status']) {
+    const path = `testimonials/${id}`;
+    try {
+      await updateDoc(doc(db, 'testimonials', id), { status });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  },
+
+  async upsertTestimonial(testimonial: Testimonial) {
+    const testimonialId = testimonial.id || `test_${Date.now()}`;
+    const path = `testimonials/${testimonialId}`;
+    const { id, ...data } = testimonial;
+    try {
+      const cleanData = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== undefined)
+      );
+      await setDoc(doc(db, 'testimonials', testimonialId), cleanData);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async deleteTestimonial(testimonialId: string) {
+    const path = `testimonials/${testimonialId}`;
+    try {
+      await deleteDoc(doc(db, 'testimonials', testimonialId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+    }
+  },
+
+  async seedInitialTestimonials() {
+    try {
+      const snap = await getDocs(collection(db, 'testimonials'));
+      if (snap.empty) {
+        for (const item of INITIAL_TESTIMONIALS) {
+          const id = `seed_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+          await setDoc(doc(db, 'testimonials', id), item);
+        }
+      }
+    } catch (error) {
+      // Non-blocking fallback handled gracefully
+      console.warn("Testimonial seeding note:", error);
     }
   }
 };

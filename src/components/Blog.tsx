@@ -203,7 +203,7 @@ export default function Blog({ isAdmin }: BlogProps) {
           {isAdmin && (
             <button
               onClick={handleAddPost}
-              className="flex items-center gap-2 px-6 py-3 rounded-full bg-gold text-zinc-950 font-bold text-sm tracking-wider uppercase hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] cursor-pointer self-start md:self-auto"
+              className="flex items-center gap-2 px-6 py-3 rounded-full bg-gold text-zinc-950 font-bold text-sm tracking-wider uppercase hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_var(--theme-glow,rgba(212,175,55,0.2))] cursor-pointer self-start md:self-auto"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>New Publication</span>
@@ -221,7 +221,7 @@ export default function Blog({ isAdmin }: BlogProps) {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wide border transition-all cursor-pointer ${
                   selectedCategory === cat
-                    ? 'bg-gold text-zinc-950 border-gold shadow-[0_0_12px_rgba(212,175,55,0.15)] font-bold'
+                    ? 'bg-gold text-zinc-950 border-gold shadow-[0_0_12px_var(--theme-glow-soft,rgba(212,175,55,0.15))] font-bold'
                     : 'bg-zinc-900/50 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
                 }`}
               >
@@ -662,7 +662,7 @@ export default function Blog({ isAdmin }: BlogProps) {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center gap-2 px-8 py-3 rounded-full bg-gold text-zinc-950 font-bold text-xs tracking-wider uppercase hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:active:scale-100 cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.15)]"
+                    className="flex items-center gap-2 px-8 py-3 rounded-full bg-gold text-zinc-950 font-bold text-xs tracking-wider uppercase hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:active:scale-100 cursor-pointer shadow-[0_0_15px_var(--theme-glow,rgba(212,175,55,0.15))]"
                   >
                     {isSubmitting ? 'Publishing...' : (editingPost ? 'Update Publication' : 'Publish Article')}
                   </button>

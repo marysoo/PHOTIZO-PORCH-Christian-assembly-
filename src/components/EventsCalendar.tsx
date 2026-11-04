@@ -371,7 +371,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
             {isAdmin && (
               <button 
                 onClick={openAddModal}
-                className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-zinc-950 font-bold px-5 py-3 rounded-full hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all text-xs uppercase tracking-wider"
+                className="flex items-center gap-2 bg-gold hover:opacity-90 text-zinc-950 font-bold px-5 py-3 rounded-full hover:shadow-[0_0_20px_var(--theme-glow,rgba(212,175,55,0.4))] transition-all text-xs uppercase tracking-wider cursor-pointer"
               >
                 <Plus size={16} /> Add New Event
               </button>
@@ -825,7 +825,7 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
                   <button 
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-yellow-400 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                    className="flex-1 py-3.5 bg-gold disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold rounded-xl hover:shadow-[0_0_20px_var(--theme-glow,rgba(212,175,55,0.4))] transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isSubmitting ? 'Saving...' : (editingEvent ? 'Save Changes' : 'Publish Event')}
                   </button>
