@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Palette, Check, RotateCcw, Sparkles, ChevronDown } from 'lucide-react';
-import { useTheme, ColorTheme } from '../context/ThemeContext';
+import { Palette, Check, Sparkles, ChevronDown } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ThemeSwitcherProps {
@@ -9,7 +9,7 @@ interface ThemeSwitcherProps {
 }
 
 export default function ThemeSwitcher({ variant = 'navbar', className = '' }: ThemeSwitcherProps) {
-  const { currentTheme, setThemeById, themes, resetToDefault } = useTheme();
+  const { currentTheme, setThemeById, themes } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -31,60 +31,52 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
   // Variant: Mobile inline picker for the mobile menu drawer
   if (variant === 'mobile-inline') {
     return (
-      <div className={`p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 ${className}`}>
+      <div className={`p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-sm ${className}`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Palette className="w-4 h-4 text-gold" />
-            <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">Sanctuary Color Palette</span>
+            <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">Choose Theme</span>
           </div>
-          <span className="text-[11px] font-medium text-gold">{currentTheme.name}</span>
+          <span className="text-[11px] font-semibold text-gold truncate max-w-[150px]">{currentTheme.name}</span>
         </div>
 
-        {/* Horizontal scrollable swatch buttons */}
-        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+        {/* 3 Color Combination Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {themes.map((theme) => {
             const isSelected = theme.id === currentTheme.id;
             return (
               <button
                 key={theme.id}
                 onClick={() => setThemeById(theme.id)}
-                className={`relative flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all cursor-pointer ${
+                className={`flex items-center gap-2.5 p-2.5 rounded-xl transition-all cursor-pointer text-left border ${
                   isSelected 
-                    ? 'bg-zinc-800/90 ring-2 ring-gold shadow-lg shadow-gold/20' 
-                    : 'bg-zinc-950/60 hover:bg-zinc-800/50 border border-zinc-800'
+                    ? 'bg-zinc-800/90 border-gold ring-1 ring-gold shadow-md' 
+                    : 'bg-zinc-950/60 hover:bg-zinc-800/60 border-zinc-800'
                 }`}
-                title={`${theme.name} - ${theme.biblicalMeaning}`}
               >
                 <div 
-                  className="w-7 h-7 rounded-full shadow-md flex items-center justify-center transition-transform hover:scale-110"
+                  className="w-7 h-7 rounded-full shrink-0 shadow-md flex items-center justify-center border border-white/20"
                   style={{ background: theme.swatchGradient }}
                 >
                   {isSelected && (
                     <Check 
-                      size={14} 
+                      size={13} 
                       className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" 
                       style={{ color: theme.accentTextColor }} 
                     />
                   )}
                 </div>
-                <span className="text-[10px] text-zinc-300 truncate w-full text-center font-medium">
-                  {theme.name.split(' ')[0]}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-zinc-100 truncate">{theme.name}</p>
+                  <p className="text-[10px] text-zinc-400 truncate">{theme.subtitle}</p>
+                </div>
               </button>
             );
           })}
         </div>
 
         <div className="mt-3 pt-2.5 border-t border-zinc-800/60 flex items-center justify-between text-[11px] text-zinc-400">
-          <span className="italic truncate max-w-[200px]">"{currentTheme.biblicalMeaning}"</span>
-          {currentTheme.id !== 'gold' && (
-            <button 
-              onClick={resetToDefault}
-              className="text-gold hover:underline flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
-            >
-              <RotateCcw size={10} /> Reset
-            </button>
-          )}
+          <span className="italic truncate max-w-[280px]">"{currentTheme.biblicalMeaning}"</span>
         </div>
       </div>
     );
@@ -105,10 +97,10 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
             aria-label="Change site color theme"
           >
             <div 
-              className="w-5 h-5 rounded-full shadow-inner flex items-center justify-center transition-transform group-hover:rotate-45"
+              className="w-5 h-5 rounded-full shadow-inner flex items-center justify-center transition-transform group-hover:rotate-45 border border-white/20"
               style={{ background: currentTheme.swatchGradient }}
             >
-              <Palette size={11} style={{ color: currentTheme.accentTextColor }} />
+              <Palette size={11} style={{ color: themeIconColor(currentTheme.id) }} />
             </div>
             <span className="text-xs font-semibold tracking-wide hidden sm:inline-block">
               {currentTheme.name}
@@ -127,26 +119,17 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 15, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="absolute bottom-14 left-0 mb-2 w-72 p-4 bg-zinc-950/95 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 z-50"
+                className="absolute bottom-14 left-0 mb-2 w-80 p-4 bg-zinc-950/95 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 z-50"
               >
                 <div className="flex items-center justify-between pb-2.5 border-b border-zinc-800/80 mb-3">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-gold" />
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">Choose Theme Color</span>
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">Site Color Options</span>
                   </div>
-                  {currentTheme.id !== 'gold' && (
-                    <button
-                      onClick={resetToDefault}
-                      className="text-[11px] text-zinc-400 hover:text-gold flex items-center gap-1 transition-colors cursor-pointer"
-                      title="Reset to default gold"
-                    >
-                      <RotateCcw size={11} />
-                      <span>Reset</span>
-                    </button>
-                  )}
+                  <span className="text-[10px] text-zinc-400 font-mono">3 Choices</span>
                 </div>
 
-                <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+                <div className="space-y-2">
                   {themes.map((theme) => {
                     const isSelected = theme.id === currentTheme.id;
                     return (
@@ -156,34 +139,35 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
                           setThemeById(theme.id);
                           setIsOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left cursor-pointer border ${
                           isSelected
-                            ? 'bg-zinc-800/90 text-white border border-gold/40 shadow-sm'
-                            : 'hover:bg-zinc-900/80 text-zinc-300 hover:text-white border border-transparent'
+                            ? 'bg-zinc-800/95 text-white border-gold/60 shadow-md ring-1 ring-gold/40'
+                            : 'hover:bg-zinc-900/80 text-zinc-300 hover:text-white border-zinc-800/70'
                         }`}
                       >
                         <div
-                          className="w-6 h-6 rounded-full shrink-0 shadow-md flex items-center justify-center"
+                          className="w-7 h-7 rounded-full shrink-0 shadow-md flex items-center justify-center border border-white/20"
                           style={{ background: theme.swatchGradient }}
                         >
                           {isSelected && (
                             <Check
-                              size={12}
+                              size={13}
                               className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
                               style={{ color: theme.accentTextColor }}
                             />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold leading-tight truncate">{theme.name}</p>
-                          <p className="text-[10px] text-zinc-400 truncate">{theme.biblicalMeaning}</p>
+                          <p className="text-xs font-bold leading-tight">{theme.name}</p>
+                          <p className="text-[10px] text-zinc-400 truncate mt-0.5">{theme.subtitle}</p>
                         </div>
                         {isSelected && (
                           <span 
-                            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0"
+                            className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0"
                             style={{ 
                               backgroundColor: `${theme.primary}25`,
-                              color: theme.primary 
+                              color: theme.id === 'white-green-gold' ? '#16A34A' : theme.primary,
+                              border: `1px solid ${theme.primary}50`
                             }}
                           >
                             Active
@@ -214,7 +198,7 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
           style={{ background: currentTheme.swatchGradient }}
         />
         <span className="hidden lg:inline">{currentTheme.name}</span>
-        <span className="lg:hidden">Color</span>
+        <span className="lg:hidden">Theme</span>
         <ChevronDown size={13} className={`text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-gold' : ''}`} />
       </button>
 
@@ -225,31 +209,22 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute right-0 mt-2.5 w-80 p-3.5 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 z-50"
+            className="absolute right-0 mt-2.5 w-84 p-3.5 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 z-50"
           >
             {/* Header */}
             <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-zinc-850">
               <div className="flex items-center gap-2">
                 <Palette className="w-4 h-4 text-gold" />
                 <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Sanctuary Palette</h4>
-                  <p className="text-[10px] text-zinc-400">Select your preferred color presence</p>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Select Color Theme</h4>
+                  <p className="text-[10px] text-zinc-400">Choose your preferred visual atmosphere</p>
                 </div>
               </div>
-              {currentTheme.id !== 'gold' && (
-                <button
-                  onClick={resetToDefault}
-                  className="text-[11px] text-zinc-400 hover:text-gold flex items-center gap-1 transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-zinc-900"
-                  title="Reset to default gold"
-                >
-                  <RotateCcw size={10} />
-                  <span>Default</span>
-                </button>
-              )}
+              <span className="text-[10px] text-zinc-400 font-mono">3 Options</span>
             </div>
 
-            {/* Theme List */}
-            <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-1">
+            {/* 3 Themes List */}
+            <div className="space-y-2">
               {themes.map((theme) => {
                 const isSelected = theme.id === currentTheme.id;
                 return (
@@ -259,14 +234,14 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
                       setThemeById(theme.id);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left cursor-pointer group ${
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left cursor-pointer group border ${
                       isSelected
-                        ? 'bg-zinc-850/90 text-white border border-gold/50 shadow-md'
-                        : 'hover:bg-zinc-900 text-zinc-300 hover:text-white border border-transparent'
+                        ? 'bg-zinc-850/90 text-white border-gold/60 shadow-md ring-1 ring-gold/40'
+                        : 'hover:bg-zinc-900 text-zinc-300 hover:text-white border-zinc-800/80'
                     }`}
                   >
                     <div
-                      className="w-7 h-7 rounded-full shrink-0 shadow-md flex items-center justify-center transition-transform group-hover:scale-105"
+                      className="w-7 h-7 rounded-full shrink-0 shadow-md flex items-center justify-center transition-transform group-hover:scale-105 border border-white/20"
                       style={{ 
                         background: theme.swatchGradient,
                         boxShadow: isSelected ? `0 0 12px ${theme.glow}` : undefined
@@ -288,7 +263,7 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
                             className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider"
                             style={{ 
                               backgroundColor: `${theme.primary}20`,
-                              color: theme.primary,
+                              color: theme.id === 'white-green-gold' ? '#16A34A' : theme.primary,
                               border: `1px solid ${theme.primary}40`
                             }}
                           >
@@ -296,7 +271,7 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-zinc-400 truncate mt-0.5">{theme.biblicalMeaning}</p>
+                      <p className="text-[10px] text-zinc-400 truncate mt-0.5">{theme.subtitle}</p>
                     </div>
                   </button>
                 );
@@ -304,7 +279,7 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
             </div>
             
             <div className="mt-3 pt-2 border-t border-zinc-900 flex items-center justify-between text-[10px] text-zinc-500">
-              <span>Aesthetic preference persists automatically</span>
+              <span>Your selection is saved across visits</span>
               <Sparkles size={11} className="text-gold opacity-60" />
             </div>
           </motion.div>
@@ -312,4 +287,10 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
       </AnimatePresence>
     </div>
   );
+}
+
+function themeIconColor(id: string): string {
+  if (id === 'white-green-gold') return '#15803D';
+  if (id === 'black-white') return '#09090B';
+  return '#FAF5FF';
 }

@@ -43,24 +43,6 @@ export const BANK_DETAILS = {
     accountType: "Ministry Domiciliary Account (USD)",
     description: "For international followers wishing to give directly to the Ministry's USD Domiciliary Account"
   },
-  europe: {
-    bankName: "OPENPAYD FINANCIAL SERVICES MALTA LTD",
-    accountName: "JAPHETH TSUKWAS MBALUMUNGA",
-    iban: "MT08CFTE280040000000000006190261",
-    swift: "CFTEMTM1XXX",
-    bankAddress: "Floor 3, 137 Spinola Road, Eastern Region, St. Julian's, STJ 3011",
-    accountType: "Prophet's Account",
-    description: "For international transfers in EUR, GBP, and European zones"
-  },
-  usa: {
-    beneficiaryName: "JAPHETH TSUKWAS MBALUMUNGA",
-    accountNumber: "213551358425",
-    routingNumber: "101019644",
-    bankName: "LEAD BANK",
-    bankAddress: "1801 Main St, MO, Kansas City, 64108",
-    accountType: "Prophet's Account",
-    description: "For international transfers from USA (ACH, Routing, Wire)"
-  },
   paypal: {
     email: "tsukwasjapheth01@gmail.com",
     accountName: "Photizo Porch Ministry / Japheth Tsukwas",

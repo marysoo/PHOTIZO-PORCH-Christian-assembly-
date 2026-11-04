@@ -32,7 +32,7 @@ const renderHeroTitle = (title: string) => {
           key={i} 
           className="inline-block text-transparent bg-clip-text font-extrabold italic"
           style={{
-            backgroundImage: 'linear-gradient(to right, var(--theme-secondary, #F59E0B), var(--theme-light, #FEF08A), var(--theme-primary, #D4AF37))',
+            backgroundImage: 'linear-gradient(to right, var(--color-gold, #B45309), var(--theme-secondary, #16A34A), var(--color-gold, #B45309))',
             filter: 'drop-shadow(0 0 16px var(--theme-glow, rgba(212,175,55,0.4)))'
           }}
         >
@@ -46,8 +46,8 @@ const renderHeroTitle = (title: string) => {
           key={i} 
           className="inline-block text-transparent bg-clip-text font-semibold tracking-wide"
           style={{
-            backgroundImage: 'linear-gradient(to right, var(--theme-primary, #D4AF37), var(--theme-secondary, #F59E0B), var(--theme-light, #FEF08A))',
-            filter: 'drop-shadow(0 0 12px var(--theme-glow, rgba(245,158,11,0.4)))'
+            backgroundImage: 'linear-gradient(to right, var(--theme-primary, #15803D), var(--color-gold, #B45309), var(--theme-secondary, #16A34A))',
+            filter: 'drop-shadow(0 0 12px var(--theme-glow, rgba(212,175,55,0.4)))'
           }}
         >
           {word}{' '}
@@ -58,10 +58,10 @@ const renderHeroTitle = (title: string) => {
       return (
         <span 
           key={i} 
-          className="inline-block text-transparent bg-clip-text font-extrabold tracking-tight glow-text"
+          className="inline-block text-transparent bg-clip-text font-extrabold tracking-tight"
           style={{
-            backgroundImage: 'linear-gradient(to right, var(--theme-light, #FEF08A), #FFFFFF, var(--theme-light, #FEF08A))',
-            filter: 'drop-shadow(0 0 25px var(--theme-glow, rgba(255,255,255,0.8)))'
+            backgroundImage: 'linear-gradient(to right, var(--color-gold, #B45309), var(--theme-secondary, #16A34A), var(--color-gold, #B45309))',
+            filter: 'drop-shadow(0 0 16px var(--theme-glow, rgba(212,175,55,0.4)))'
           }}
         >
           {word}{' '}
@@ -70,7 +70,11 @@ const renderHeroTitle = (title: string) => {
     }
     if (cleanWord === 'redefining') {
       return (
-        <span key={i} className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400 font-bold">
+        <span 
+          key={i} 
+          className="inline-block font-bold"
+          style={{ color: 'var(--color-gold, #B45309)' }}
+        >
           {word}{' '}
         </span>
       );
@@ -80,13 +84,13 @@ const renderHeroTitle = (title: string) => {
         <span 
           key={i} 
           className="italic glow-text font-serif"
-          style={{ color: 'var(--theme-primary, #D4AF37)' }}
+          style={{ color: 'var(--color-gold, #B45309)' }}
         >
           {word}{' '}
         </span>
       );
     }
-    return <span key={i} className="text-zinc-100">{word} </span>;
+    return <span key={i} className="theme-heading-word">{word} </span>;
   });
 };
 
@@ -95,6 +99,24 @@ export default function App() {
   const { user, isAdmin: actualIsAdmin } = useAuth();
   const [dragActive, setDragActive] = useState(false);
   const [aboutLightboxUrl, setAboutLightboxUrl] = useState<string | null>(null);
+  const [isStreamLive, setIsStreamLive] = useState(false);
+  const [isTogglingLive, setIsTogglingLive] = useState(false);
+  const [adminToast, setAdminToast] = useState<string | null>(null);
+
+  const handleToggleLiveDirect = async () => {
+    setIsTogglingLive(true);
+    const nextStatus = !isStreamLive;
+    try {
+      await firebaseService.setLiveStatus(nextStatus);
+      setAdminToast(nextStatus ? 'Live broadcast is now ON AIR! Live indicator is active.' : 'Live broadcast switched to OFF-AIR.');
+      setTimeout(() => setAdminToast(null), 3500);
+    } catch (e) {
+      console.error('Failed to toggle live status:', e);
+      alert('Failed to update live status.');
+    } finally {
+      setIsTogglingLive(false);
+    }
+  };
 
   const handleAboutImageUpload = (file: File, section: PageSection) => {
     if (!file.type.startsWith('image/')) {
@@ -250,34 +272,90 @@ export default function App() {
 
       setSections(correctedData.filter(s => ['hero', 'about'].includes(s.sectionId)).sort((a, b) => (a.order || 0) - (b.order || 0)));
     });
-    return () => unsub();
+
+    const unsubStream = firebaseService.subscribeStream((stream) => {
+      setIsStreamLive(Boolean(stream?.isLive));
+    });
+
+    return () => {
+      unsub();
+      unsubStream();
+    };
   }, [effectiveIsAdmin]);
 
   return (
     <div className="min-h-screen">
-      {/* Admin Floating Control Bar - Rendered strictly for authenticated actualIsAdmin users ONLY */}
+      {/* Admin Floating Control Dashboard Bar */}
       {actualIsAdmin && (
-        <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-3 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-2.5 rounded-full shadow-2xl">
+        <div className="fixed bottom-6 right-6 z-[100] flex flex-wrap items-center gap-2.5 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 p-2 rounded-full shadow-2xl">
+          {/* Direct Manual 'isLive' Toggle Switch */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 shadow-inner">
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${isStreamLive ? 'bg-red-500 animate-ping' : 'bg-zinc-600'}`} />
+              <Radio size={13} className={isStreamLive ? 'text-red-500' : 'text-zinc-500'} />
+              <span className="text-[11px] font-bold text-zinc-300 tracking-wider uppercase hidden sm:inline">Broadcast</span>
+            </div>
+            
+            <button
+              type="button"
+              onClick={handleToggleLiveDirect}
+              disabled={isTogglingLive}
+              className={`relative w-12 h-6 rounded-full p-0.5 transition-all cursor-pointer ${
+                isStreamLive 
+                  ? 'bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.6)]' 
+                  : 'bg-zinc-800 hover:bg-zinc-700'
+              }`}
+              title={isStreamLive ? "Broadcast is ON AIR. Click to switch to OFF AIR." : "Broadcast is OFF AIR. Click to switch to LIVE ON AIR."}
+              aria-label="Toggle live broadcast on or off"
+            >
+              <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform flex items-center justify-center ${isStreamLive ? 'translate-x-6' : ''}`}>
+                {isStreamLive && <span className="w-1.5 h-1.5 rounded-full bg-red-600" />}
+              </div>
+            </button>
+            <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isStreamLive ? 'text-red-400 animate-pulse' : 'text-zinc-500'}`}>
+              {isStreamLive ? 'LIVE' : 'OFF'}
+            </span>
+          </div>
+
+          {/* Edit Mode Toggle */}
           <button
             onClick={toggleEditMode}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all cursor-pointer ${
               isEditMode 
                 ? 'bg-gold text-zinc-950 font-bold shadow-[0_0_15px_var(--theme-glow,rgba(212,175,55,0.3))]' 
                 : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
             }`}
           >
             <Sparkles className={`w-3.5 h-3.5 ${isEditMode ? 'animate-pulse text-zinc-950' : 'text-gold'}`} />
-            <span>{isEditMode ? 'Edit Mode: Active' : 'Edit Mode: Inactive'}</span>
+            <span className="hidden sm:inline">{isEditMode ? 'Edit Mode: Active' : 'Edit Mode: Inactive'}</span>
+            <span className="sm:hidden">{isEditMode ? 'Edit: On' : 'Edit: Off'}</span>
           </button>
+
+          {/* Admin Logout */}
           <button 
             onClick={logout}
-            className="p-2.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
+            className="p-2 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
             title="Logout Admin"
           >
-            <LogOut size={16} />
+            <LogOut size={15} />
           </button>
         </div>
       )}
+
+      {/* Admin Action Feedback Toast */}
+      <AnimatePresence>
+        {adminToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 right-6 z-[110] max-w-sm px-4 py-3 rounded-2xl bg-zinc-900/95 backdrop-blur-xl border border-gold/40 shadow-2xl flex items-center gap-3 text-xs text-white"
+          >
+            <div className={`w-2.5 h-2.5 rounded-full ${isStreamLive ? 'bg-red-500 animate-ping' : 'bg-gold'}`} />
+            <span className="flex-1 font-medium">{adminToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Navigation Header */}
       <nav className="fixed top-0 w-full z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900">
@@ -299,8 +377,25 @@ export default function App() {
 
             <ThemeSwitcher variant="navbar" />
 
-            <a href="#live" className="bg-zinc-100 text-zinc-950 px-5 py-2.5 rounded-full font-bold hover:bg-gold hover:text-white transition-all cursor-pointer">
-              Live Service
+            <a 
+              href="#live" 
+              className={`px-5 py-2.5 rounded-full font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                isStreamLive 
+                  ? 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse' 
+                  : 'bg-zinc-100 text-zinc-950 hover:bg-gold hover:text-white'
+              }`}
+            >
+              {isStreamLive ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                  <span>● LIVE NOW</span>
+                </>
+              ) : (
+                <>
+                  <Radio size={14} />
+                  <span>Live Service</span>
+                </>
+              )}
             </a>
           </div>
 
@@ -402,22 +497,56 @@ export default function App() {
                   <a 
                     href="#live" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-zinc-950 font-bold rounded-xl shadow-lg hover:brightness-110 transition-all text-center text-sm"
+                    className={`w-full flex items-center justify-center gap-2 py-3 font-bold rounded-xl shadow-lg transition-all text-center text-sm ${
+                      isStreamLive
+                        ? 'bg-red-600 text-white shadow-red-600/30 animate-pulse'
+                        : 'bg-gradient-to-r from-amber-500 to-yellow-400 text-zinc-950 hover:brightness-110'
+                    }`}
                   >
-                    <Radio size={16} className="animate-pulse" /> Live Service
+                    <Radio size={16} className={isStreamLive ? 'animate-pulse' : ''} />
+                    <span>{isStreamLive ? '● WATCH LIVE BROADCAST NOW' : 'Live Service Broadcast'}</span>
                   </a>
 
                   {actualIsAdmin ? (
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-gold/30">
-                      <div className="flex items-center gap-2 text-xs text-gold font-bold">
-                        <ShieldCheck size={16} /> Admin Authenticated
+                    <div className="flex flex-col gap-2.5 p-3.5 rounded-xl bg-zinc-900 border border-gold/30">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-gold font-bold">
+                          <ShieldCheck size={16} /> Admin Authenticated
+                        </div>
+                        <button 
+                          onClick={() => { logout(); setIsMenuOpen(false); }}
+                          className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-semibold cursor-pointer"
+                        >
+                          <LogOut size={14} /> Logout
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => { logout(); setIsMenuOpen(false); }}
-                        className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-semibold cursor-pointer"
-                      >
-                        <LogOut size={14} /> Logout
-                      </button>
+
+                      {/* Direct Mobile Live Toggle Switch */}
+                      <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
+                        <div className="flex items-center gap-1.5">
+                          <Radio size={14} className={isStreamLive ? 'text-red-500 animate-pulse' : 'text-zinc-500'} />
+                          <span className="text-xs font-semibold text-zinc-300">Live Status:</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleToggleLiveDirect}
+                            disabled={isTogglingLive}
+                            className={`relative w-12 h-6 rounded-full p-0.5 transition-all cursor-pointer ${
+                              isStreamLive 
+                                ? 'bg-red-600 shadow-[0_0_12px_rgba(239,68,68,0.5)]' 
+                                : 'bg-zinc-800'
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform flex items-center justify-center ${isStreamLive ? 'translate-x-6' : ''}`}>
+                              {isStreamLive && <span className="w-1.5 h-1.5 rounded-full bg-red-600" />}
+                            </div>
+                          </button>
+                          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isStreamLive ? 'text-red-400 animate-pulse' : 'text-zinc-500'}`}>
+                            {isStreamLive ? 'ON AIR' : 'OFF'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <button 

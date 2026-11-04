@@ -134,6 +134,18 @@
         "createdAt": { "type": "string" }
       },
       "required": ["name", "title", "story", "status", "createdAt"]
+    },
+    "LiveChatMessage": {
+      "title": "Live Chat Message",
+      "description": "Real-time fellowship message or prayer declaration during live broadcast",
+      "type": "object",
+      "properties": {
+        "senderName": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "role": { "type": "string", "enum": ["member", "pastor", "admin"] }
+      },
+      "required": ["senderName", "message", "createdAt"]
     }
   },
   "firestore": {
@@ -176,6 +188,10 @@
     "/testimonials/{testimonialId}": {
       "schema": "Testimonial",
       "description": "Member testimonies and praise reports"
+    },
+    "/liveChatMessages/{messageId}": {
+      "schema": "LiveChatMessage",
+      "description": "Live fellowship chat stream messages"
     }
   }
 }

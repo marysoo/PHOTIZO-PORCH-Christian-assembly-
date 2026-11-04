@@ -1,13 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface ColorTheme {
-  id: string;
+  id: 'white-green-gold' | 'black-white' | 'purple-white';
   name: string;
+  subtitle: string;
   biblicalMeaning: string;
+  mode: 'light' | 'dark' | 'purple';
+  bgPrimary: string;
+  bgSecondary: string;
+  bgCard: string;
+  bgNav: string;
   primary: string;
   secondary: string;
   light: string;
   dark: string;
+  goldFont: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  border: string;
   glow: string;
   glowSoft: string;
   swatchGradient: string;
@@ -16,108 +27,89 @@ export interface ColorTheme {
 
 export const SACRED_THEMES: ColorTheme[] = [
   {
-    id: 'gold',
-    name: 'Sanctuary Gold',
-    biblicalMeaning: 'Divine Glory & Ark of Covenant',
-    primary: '#D4AF37',
-    secondary: '#F59E0B',
-    light: '#FEF08A',
-    dark: '#854D0E',
+    id: 'white-green-gold',
+    name: 'White & Green (Gold Fonts)',
+    subtitle: 'Luminous White Background, Emerald Accents & Gold Fonts',
+    biblicalMeaning: 'Living Water, Purity of White & Sovereign Gold Glory',
+    mode: 'light',
+    bgPrimary: '#FFFFFF',
+    bgSecondary: '#F4FAF4',
+    bgCard: '#FFFFFF',
+    bgNav: 'rgba(255, 255, 255, 0.95)',
+    primary: '#15803D',       // Lush emerald/forest green
+    secondary: '#16A34A',     // Vibrant green
+    light: '#86EFAC',         // Mint highlight
+    dark: '#14532D',          // Deep forest green
+    goldFont: '#B45309',      // Radiant Amber-Gold font for headers & titles
+    textPrimary: '#1F2937',   // Dark readable charcoal for body
+    textSecondary: '#15803D', // Green subtext
+    textMuted: '#4B5563',     // Accessible gray
+    border: '#E2E8F0',        // Subtle border
     glow: 'rgba(212, 175, 55, 0.45)',
-    glowSoft: 'rgba(212, 175, 55, 0.15)',
-    swatchGradient: 'linear-gradient(135deg, #F59E0B 0%, #D4AF37 50%, #FEF08A 100%)',
-    accentTextColor: '#09090b'
-  },
-  {
-    id: 'sapphire',
-    name: 'Celestial Sapphire',
-    biblicalMeaning: 'Throne Room & Living Water',
-    primary: '#2563EB',
-    secondary: '#0EA5E9',
-    light: '#7DD3FC',
-    dark: '#1E3A8A',
-    glow: 'rgba(37, 99, 235, 0.45)',
-    glowSoft: 'rgba(37, 99, 235, 0.15)',
-    swatchGradient: 'linear-gradient(135deg, #1D4ED8 0%, #0EA5E9 50%, #7DD3FC 100%)',
+    glowSoft: 'rgba(22, 163, 74, 0.15)',
+    swatchGradient: 'linear-gradient(135deg, #FFFFFF 0%, #16A34A 50%, #D4AF37 100%)',
     accentTextColor: '#FFFFFF'
   },
   {
-    id: 'crimson',
-    name: 'Apostolic Crimson',
-    biblicalMeaning: 'Holy Fire & Covenant Blood',
-    primary: '#E11D48',
-    secondary: '#DC2626',
-    light: '#FDA4AF',
-    dark: '#881337',
-    glow: 'rgba(225, 29, 72, 0.45)',
-    glowSoft: 'rgba(225, 29, 72, 0.15)',
-    swatchGradient: 'linear-gradient(135deg, #DC2626 0%, #E11D48 50%, #FDA4AF 100%)',
-    accentTextColor: '#FFFFFF'
+    id: 'black-white',
+    name: 'Black & White',
+    subtitle: 'Classic Onyx Black Background with Crisp White Typography',
+    biblicalMeaning: 'Light Piercing the Darkness, Pure Holiness & Righteousness',
+    mode: 'dark',
+    bgPrimary: '#09090B',
+    bgSecondary: '#121215',
+    bgCard: '#18181B',
+    bgNav: 'rgba(9, 9, 11, 0.95)',
+    primary: '#FFFFFF',       // Pure white accent
+    secondary: '#E4E4E7',     // Silver zinc
+    light: '#FFFFFF',         // Bright white
+    dark: '#27272A',          // Deep charcoal
+    goldFont: '#FFFFFF',      // Fitting crisp white font
+    textPrimary: '#FAFAFA',   // Pure white for headers & text
+    textSecondary: '#E4E4E7', // Silver white
+    textMuted: '#A1A1AA',     // Cool silver gray
+    border: '#27272A',        // Dark graphite border
+    glow: 'rgba(255, 255, 255, 0.35)',
+    glowSoft: 'rgba(255, 255, 255, 0.12)',
+    swatchGradient: 'linear-gradient(135deg, #000000 0%, #27272A 50%, #FFFFFF 100%)',
+    accentTextColor: '#09090B'
   },
   {
-    id: 'emerald',
-    name: 'Emerald Revival',
-    biblicalMeaning: 'Living Hope & Supernatural Abundance',
-    primary: '#059669',
-    secondary: '#10B981',
-    light: '#6EE7B7',
-    dark: '#064E3B',
-    glow: 'rgba(5, 150, 105, 0.45)',
-    glowSoft: 'rgba(5, 150, 105, 0.15)',
-    swatchGradient: 'linear-gradient(135deg, #047857 0%, #10B981 50%, #6EE7B7 100%)',
+    id: 'purple-white',
+    name: 'Purple & White',
+    subtitle: 'Regal Royal Purple with White Harmony & Suitable Typography',
+    biblicalMeaning: 'Royal Priesthood, Apostolic Majesty & Pristine Radiance',
+    mode: 'purple',
+    bgPrimary: '#1E0A38',     // Deep imperial purple
+    bgSecondary: '#290D4D',   // Rich violet purple
+    bgCard: '#2E1055',        // Elevated royal card purple
+    bgNav: 'rgba(30, 10, 56, 0.95)',
+    primary: '#A855F7',       // Luminous purple
+    secondary: '#C084FC',     // Light lavender
+    light: '#FAF5FF',         // Pure white-lavender
+    dark: '#4C1D95',          // Deep royal purple
+    goldFont: '#FACC15',      // Royal gold accents
+    textPrimary: '#FAF5FF',   // Crisp white/lavender
+    textSecondary: '#E9D5FF', // Soft lilac
+    textMuted: '#C4B5FD',     // Muted violet
+    border: '#4C1D95',        // Royal purple border
+    glow: 'rgba(168, 85, 247, 0.5)',
+    glowSoft: 'rgba(168, 85, 247, 0.18)',
+    swatchGradient: 'linear-gradient(135deg, #1E0A38 0%, #9333EA 50%, #FAF5FF 100%)',
     accentTextColor: '#FFFFFF'
-  },
-  {
-    id: 'amethyst',
-    name: 'Amethyst Majesty',
-    biblicalMeaning: 'Royal Priesthood & Prophetic Revelation',
-    primary: '#7C3AED',
-    secondary: '#9333EA',
-    light: '#C084FC',
-    dark: '#4C1D95',
-    glow: 'rgba(124, 58, 237, 0.45)',
-    glowSoft: 'rgba(124, 58, 237, 0.15)',
-    swatchGradient: 'linear-gradient(135deg, #6D28D9 0%, #9333EA 50%, #C084FC 100%)',
-    accentTextColor: '#FFFFFF'
-  },
-  {
-    id: 'copper',
-    name: 'Solomon\'s Copper',
-    biblicalMeaning: 'Bronze Altar & Refined Fire',
-    primary: '#EA580C',
-    secondary: '#D97706',
-    light: '#FDBA74',
-    dark: '#7C2D12',
-    glow: 'rgba(234, 88, 12, 0.45)',
-    glowSoft: 'rgba(234, 88, 12, 0.15)',
-    swatchGradient: 'linear-gradient(135deg, #C2410C 0%, #EA580C 50%, #FDBA74 100%)',
-    accentTextColor: '#FFFFFF'
-  },
-  {
-    id: 'platinum',
-    name: 'Luminous Platinum',
-    biblicalMeaning: 'Robes of Righteousness & Pure Light',
-    primary: '#E2E8F0',
-    secondary: '#94A3B8',
-    light: '#FFFFFF',
-    dark: '#334155',
-    glow: 'rgba(255, 255, 255, 0.5)',
-    glowSoft: 'rgba(255, 255, 255, 0.15)',
-    swatchGradient: 'linear-gradient(135deg, #64748B 0%, #CBD5E1 50%, #FFFFFF 100%)',
-    accentTextColor: '#09090b'
   }
 ];
 
 interface ThemeContextType {
   currentTheme: ColorTheme;
-  setThemeById: (id: string) => void;
+  setThemeById: (id: ColorTheme['id']) => void;
   themes: ColorTheme[];
   resetToDefault: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'photizo_ministry_color_theme';
+const STORAGE_KEY = 'photizo_ministry_three_color_theme';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState<ColorTheme>(() => {
@@ -130,12 +122,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // ignore
     }
-    return SACRED_THEMES[0]; // Sanctuary Gold by default
+    // Default to the first requested combination: White background and green with gold fonts
+    return SACRED_THEMES[0];
   });
 
   const applyThemeToDOM = (theme: ColorTheme) => {
     const root = document.documentElement;
     root.setAttribute('data-theme', theme.id);
+    root.setAttribute('data-theme-mode', theme.mode);
+
+    // Dynamic CSS theme variables
+    root.style.setProperty('--theme-id', theme.id);
     root.style.setProperty('--theme-primary', theme.primary);
     root.style.setProperty('--theme-secondary', theme.secondary);
     root.style.setProperty('--theme-light', theme.light);
@@ -144,11 +141,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--theme-glow-soft', theme.glowSoft);
     root.style.setProperty('--theme-text-contrast', theme.accentTextColor);
 
-    // Also update --color-gold and amber shades so all Tailwind utilities dynamically respond
-    root.style.setProperty('--color-gold', theme.primary);
+    // Theme Font & Background Tokens
+    root.style.setProperty('--color-gold', theme.goldFont);
     root.style.setProperty('--color-gold-light', theme.light);
     root.style.setProperty('--color-gold-dark', theme.dark);
     root.style.setProperty('--color-gold-secondary', theme.secondary);
+
+    root.style.setProperty('--theme-bg-primary', theme.bgPrimary);
+    root.style.setProperty('--theme-bg-secondary', theme.bgSecondary);
+    root.style.setProperty('--theme-bg-card', theme.bgCard);
+    root.style.setProperty('--theme-bg-nav', theme.bgNav);
+    root.style.setProperty('--theme-text-primary', theme.textPrimary);
+    root.style.setProperty('--theme-text-secondary', theme.textSecondary);
+    root.style.setProperty('--theme-text-muted', theme.textMuted);
+    root.style.setProperty('--theme-border', theme.border);
   };
 
   useEffect(() => {
@@ -160,7 +166,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [currentTheme]);
 
-  const setThemeById = (id: string) => {
+  const setThemeById = (id: ColorTheme['id']) => {
     const theme = SACRED_THEMES.find(t => t.id === id);
     if (theme) {
       setCurrentTheme(theme);

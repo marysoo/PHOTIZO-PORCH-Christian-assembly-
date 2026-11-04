@@ -8,7 +8,8 @@ import {
   deleteDoc, 
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { db, OperationType, handleFirestoreError } from './firebase';
 
@@ -48,6 +49,14 @@ export interface LiveStream {
   streamId: string;
   platform: 'youtube' | 'vimeo';
   title?: string;
+}
+
+export interface LiveChatMessage {
+  id?: string;
+  senderName: string;
+  message: string;
+  createdAt: string;
+  role?: 'member' | 'pastor' | 'admin';
 }
 
 export interface ChurchEvent {
@@ -265,6 +274,60 @@ export const firebaseService = {
       await setDoc(doc(db, path), stream);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async setLiveStatus(isLive: boolean) {
+    const path = 'settings/stream';
+    try {
+      const snap = await getDoc(doc(db, path));
+      if (snap.exists()) {
+        const existing = snap.data() as LiveStream;
+        await setDoc(doc(db, path), {
+          ...existing,
+          isLive
+        });
+      } else {
+        await setDoc(doc(db, path), {
+          isLive,
+          streamId: '',
+          platform: 'youtube',
+          title: 'Photizo Porch Divine Service'
+        });
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  // Real-Time Live Stream Chat
+  subscribeLiveChat(callback: (messages: LiveChatMessage[]) => void) {
+    const path = 'liveChatMessages';
+    const q = query(collection(db, path), orderBy('createdAt', 'asc'), limit(150));
+    return onSnapshot(q, (snap) => {
+      const messages = snap.docs.map(d => ({ id: d.id, ...d.data() } as LiveChatMessage));
+      callback(messages);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+    });
+  },
+
+  async sendLiveChatMessage(msg: Omit<LiveChatMessage, 'id'>) {
+    const messageId = `chat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const path = `liveChatMessages/${messageId}`;
+    try {
+      await setDoc(doc(db, 'liveChatMessages', messageId), msg);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async deleteLiveChatMessage(messageId: string) {
+    const path = `liveChatMessages/${messageId}`;
+    try {
+      await deleteDoc(doc(db, 'liveChatMessages', messageId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
     }
   },
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, CreditCard, Landmark, Globe, CheckCircle2, QrCode, Copy, Check, Info, Coins, Lock, ExternalLink } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { ChevronDown, CreditCard, Landmark, Globe, CheckCircle2, Copy, Check, Info, Coins, Lock, ExternalLink } from 'lucide-react';
 import { GIVING_OPTIONS, BANK_DETAILS } from '../constants';
 
 export default function GivingHub() {
@@ -14,10 +13,7 @@ export default function GivingHub() {
   
   const [showLocalDetails, setShowLocalDetails] = useState(false);
   const [showDomDetails, setShowDomDetails] = useState(false);
-  const [showEuropeDetails, setShowEuropeDetails] = useState(false);
-  const [showUsaDetails, setShowUsaDetails] = useState(false);
   const [showPaypalDetails, setShowPaypalDetails] = useState(false);
-  const [showIBANQR, setShowIBANQR] = useState(false);
 
   // Close modals on Escape key & manage body scroll lock to prevent trapped scrolls
   useEffect(() => {
@@ -25,14 +21,12 @@ export default function GivingHub() {
       if (e.key === 'Escape') {
         setShowLocalDetails(false);
         setShowDomDetails(false);
-        setShowEuropeDetails(false);
-        setShowUsaDetails(false);
         setShowPaypalDetails(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    const hasAnyOpen = showLocalDetails || showDomDetails || showEuropeDetails || showUsaDetails || showPaypalDetails;
+    const hasAnyOpen = showLocalDetails || showDomDetails || showPaypalDetails;
     if (hasAnyOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -43,7 +37,7 @@ export default function GivingHub() {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [showLocalDetails, showDomDetails, showEuropeDetails, showUsaDetails, showPaypalDetails]);
+  }, [showLocalDetails, showDomDetails, showPaypalDetails]);
 
   return (
     <section id="giving" className="relative py-24 px-6 overflow-hidden">
@@ -123,7 +117,7 @@ export default function GivingHub() {
                 ) : selectedRoute === 'international' ? (
                   <>
                     <Globe className="w-5 h-5 text-sky-400" />
-                    <span className="text-zinc-100">International Payment (PayPal & Multi-Currency)</span>
+                    <span className="text-zinc-100">International Payment (PayPal & Keystone Bank Dom)</span>
                   </>
                 ) : (
                   <>
@@ -183,7 +177,7 @@ export default function GivingHub() {
                           International Payment
                           <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-sky-400/10 text-sky-400 border border-sky-400/20">Global</span>
                         </div>
-                        <p className="text-xs text-zinc-500">PayPal (tsukwasjapheth01@gmail.com), USD Dom, Europe IBAN & USA ACH</p>
+                        <p className="text-xs text-zinc-500">PayPal (tsukwasjapheth01@gmail.com) & Keystone Bank USD Dom Account</p>
                       </div>
                     </div>
                     {selectedRoute === 'international' && <CheckCircle2 className="w-5 h-5 text-sky-400 shrink-0 ml-2" />}
@@ -290,11 +284,11 @@ export default function GivingHub() {
               >
                 <div className="flex items-center gap-3">
                   <div className="h-[1px] flex-1 bg-zinc-800/40" />
-                  <span className="text-zinc-500 text-xs font-semibold tracking-[0.2em] uppercase">International Channels (PayPal / USD / EUR / GBP / ACH)</span>
+                  <span className="text-zinc-500 text-xs font-semibold tracking-[0.2em] uppercase">International Channels (PayPal & Keystone Bank Dom Account)</span>
                   <div className="h-[1px] flex-1 bg-zinc-800/40" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
                   {/* PayPal Transfer Card */}
                   <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 via-zinc-900/70 to-zinc-950 border border-sky-500/30 hover:border-sky-400/60 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-sky-500/[0.03] hover:shadow-sky-500/[0.08]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl group-hover:bg-sky-500/15 transition-all pointer-events-none" />
@@ -343,7 +337,7 @@ export default function GivingHub() {
                     </div>
                   </div>
 
-                  {/* Ministry Domiciliary Transfer Card */}
+                  {/* Keystone Bank Domiciliary Transfer Card */}
                   <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-amber-500/20 hover:border-amber-500/40 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-amber-500/[0.02] hover:shadow-amber-500/[0.05]">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
                     
@@ -356,14 +350,14 @@ export default function GivingHub() {
                           <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20 inline-block mb-1">
                             {BANK_DETAILS.dom.accountType}
                           </span>
-                          <h3 className="text-lg font-serif text-white">Ministry Dom Route</h3>
+                          <h3 className="text-lg font-serif text-white">Keystone Bank Dom Account</h3>
                         </div>
                       </div>
                       
                       <QuickCopy value={BANK_DETAILS.dom.accountNumber} />
                     </div>
 
-                    <p className="text-xs text-zinc-500 mb-5 leading-relaxed">{BANK_DETAILS.dom.description}</p>
+                    <p className="text-xs text-zinc-400 mb-5 leading-relaxed">{BANK_DETAILS.dom.description}</p>
 
                     <div className="space-y-4 font-sans border-t border-zinc-800/50 pt-5">
                       <div>
@@ -372,7 +366,7 @@ export default function GivingHub() {
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/40 p-3 rounded-xl border border-zinc-800/20">
                         <div className="min-w-0 flex-1">
-                          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Number</span>
+                          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Number (USD)</span>
                           <p className="font-mono text-sm text-zinc-200 truncate">{BANK_DETAILS.dom.accountNumber}</p>
                         </div>
                         <button 
@@ -380,92 +374,6 @@ export default function GivingHub() {
                           className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap"
                         >
                           <Info size={14} className="text-amber-400" />
-                          View Info
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Europe Transfer Card */}
-                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-zinc-800 hover:border-zinc-700/80 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-black/30">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-700/5 rounded-full blur-2xl pointer-events-none" />
-                    
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 bg-zinc-800 rounded-2xl flex items-center justify-center border border-zinc-700/50 group-hover:scale-105 transition-transform">
-                          <Globe className="w-5 h-5 text-zinc-400" />
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 inline-block mb-1">
-                            {BANK_DETAILS.europe.accountType}
-                          </span>
-                          <h3 className="text-lg font-serif text-white">Europe & UK Route</h3>
-                        </div>
-                      </div>
-                      
-                      <QuickCopy value={BANK_DETAILS.europe.iban} />
-                    </div>
-
-                    <p className="text-xs text-zinc-500 mb-5 leading-relaxed">{BANK_DETAILS.europe.description}</p>
-
-                    <div className="space-y-4 font-sans border-t border-zinc-800/50 pt-5">
-                      <div>
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Beneficiary</span>
-                        <p className="text-zinc-300 text-sm font-medium tracking-wide">{BANK_DETAILS.europe.accountName}</p>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/40 p-3 rounded-xl border border-zinc-800/20">
-                        <div className="min-w-0 flex-1">
-                          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">IBAN</span>
-                          <p className="font-mono text-sm text-zinc-200 truncate">{BANK_DETAILS.europe.iban}</p>
-                        </div>
-                        <button 
-                          onClick={() => setShowEuropeDetails(true)}
-                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap"
-                        >
-                          <Info size={14} className="text-gold" />
-                          View Info
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* USA Transfer Card */}
-                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-zinc-800 hover:border-zinc-700/80 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-black/30">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-700/5 rounded-full blur-2xl pointer-events-none" />
-                    
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 bg-zinc-800 rounded-2xl flex items-center justify-center border border-zinc-700/50 group-hover:scale-105 transition-transform">
-                          <Globe className="w-5 h-5 text-zinc-400" />
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 inline-block mb-1">
-                            {BANK_DETAILS.usa.accountType}
-                          </span>
-                          <h3 className="text-lg font-serif text-white">USA ACH Route</h3>
-                        </div>
-                      </div>
-                      
-                      <QuickCopy value={BANK_DETAILS.usa.accountNumber} />
-                    </div>
-
-                    <p className="text-xs text-zinc-500 mb-5 leading-relaxed">{BANK_DETAILS.usa.description}</p>
-
-                    <div className="space-y-4 font-sans border-t border-zinc-800/50 pt-5">
-                      <div>
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Beneficiary</span>
-                        <p className="text-zinc-300 text-sm font-medium tracking-wide">{BANK_DETAILS.usa.beneficiaryName}</p>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/40 p-3 rounded-xl border border-zinc-800/20">
-                        <div className="min-w-0 flex-1">
-                          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Number</span>
-                          <p className="font-mono text-sm text-zinc-200 truncate">{BANK_DETAILS.usa.accountNumber}</p>
-                        </div>
-                        <button 
-                          onClick={() => setShowUsaDetails(true)}
-                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap"
-                        >
-                          <Info size={14} className="text-gold" />
                           View Info
                         </button>
                       </div>
@@ -595,168 +503,6 @@ export default function GivingHub() {
               <button 
                 onClick={() => setShowDomDetails(false)}
                 className="w-full py-4 bg-zinc-100 text-zinc-950 font-bold rounded-xl hover:bg-amber-400 hover:text-white transition-all shadow-lg"
-              >
-                Close Details
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Europe Transfer Modal */}
-      <AnimatePresence>
-        {showEuropeDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowEuropeDetails(false)}
-              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 inline-block mb-1">
-                    {BANK_DETAILS.europe.accountType}
-                  </span>
-                  <h3 className="text-2xl font-serif text-white">Europe Bank Details</h3>
-                </div>
-                <button 
-                  onClick={() => setShowEuropeDetails(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
-                >
-                  &times;
-                </button>
-              </div>
-              
-              <div className="space-y-1 mb-8">
-                <DetailRow label="Bank Name" value={BANK_DETAILS.europe.bankName} />
-                <DetailRow label="Account Name" value={BANK_DETAILS.europe.accountName} />
-                <DetailRow label="IBAN" value={BANK_DETAILS.europe.iban} />
-                <DetailRow label="SWIFT/BIC" value={BANK_DETAILS.europe.swift} />
-                <DetailRow label="Bank Address" value={BANK_DETAILS.europe.bankAddress} />
-              </div>
-
-              {/* Important Instruction for UK Users */}
-              <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex gap-3 text-left">
-                <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">UK Transfer Guideline</h4>
-                  <p className="text-xs text-zinc-300 leading-relaxed">
-                    A UK account is required. Please ensure the destination country is set to <strong className="text-white">Malta</strong> for all users sending/paying to this account from the UK.
-                  </p>
-                </div>
-              </div>
-
-              {/* QR Code Toggle */}
-              <div className="mb-8">
-                <button 
-                  onClick={() => setShowIBANQR(!showIBANQR)}
-                  className="w-full flex items-center justify-center gap-2 py-3 border border-zinc-800 rounded-xl hover:border-gold hover:text-gold transition-all group"
-                >
-                  <QrCode size={18} className="group-hover:scale-110 transition-transform" />
-                  <span className="font-medium text-xs tracking-wider uppercase">{showIBANQR ? "Hide IBAN QR Code" : "Show IBAN QR Code"}</span>
-                </button>
-                
-                <AnimatePresence>
-                  {showIBANQR && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="pt-6 flex flex-col items-center">
-                        <div className="bg-white p-4 rounded-2xl shadow-xl">
-                          <QRCodeSVG 
-                            value={BANK_DETAILS.europe.iban} 
-                            size={180}
-                            level="H"
-                            includeMargin={false}
-                          />
-                        </div>
-                        <p className="text-[10px] text-zinc-500 mt-4 uppercase tracking-[0.2em] text-center">
-                          Scan this code in your mobile banking app to copy the IBAN directly
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <button 
-                onClick={() => setShowEuropeDetails(false)}
-                className="w-full py-4 bg-zinc-100 text-zinc-950 font-bold rounded-xl hover:bg-gold hover:text-white transition-all shadow-lg"
-              >
-                Close Details
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* USA Transfer Modal */}
-      <AnimatePresence>
-        {showUsaDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowUsaDetails(false)}
-              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 inline-block mb-1">
-                    {BANK_DETAILS.usa.accountType}
-                  </span>
-                  <h3 className="text-2xl font-serif text-white">USA Bank Details</h3>
-                </div>
-                <button 
-                  onClick={() => setShowUsaDetails(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
-                >
-                  &times;
-                </button>
-              </div>
-              
-              <div className="space-y-1 mb-8">
-                <DetailRow label="Beneficiary Name" value={BANK_DETAILS.usa.beneficiaryName} />
-                <DetailRow label="Account Number" value={BANK_DETAILS.usa.accountNumber} />
-                <DetailRow label="Routing Number" value={BANK_DETAILS.usa.routingNumber} />
-                <DetailRow label="Bank Name" value={BANK_DETAILS.usa.bankName} />
-                <DetailRow label="Bank Address" value={BANK_DETAILS.usa.bankAddress} />
-              </div>
-
-              {/* Important Transfer Guideline for US Users */}
-              <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex gap-3 text-left">
-                <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">USA Transfer Guideline</h4>
-                  <p className="text-xs text-zinc-300 leading-relaxed">
-                    Please use <strong className="text-white">ACH</strong> only. Do <strong className="text-red-400">NOT</strong> use Wire transfer. When presented with options by USA banks, choose ACH and NOT wire.
-                  </p>
-                </div>
-              </div>
-
-              <button 
-                onClick={() => setShowUsaDetails(false)}
-                className="w-full py-4 bg-zinc-100 text-zinc-950 font-bold rounded-xl hover:bg-gold hover:text-white transition-all shadow-lg"
               >
                 Close Details
               </button>
