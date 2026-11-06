@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Trash2, Shield, Heart, Sparkles, MessageSquare, ChevronDown, User, Flame } from 'lucide-react';
+import { Send, Trash2, Shield, Heart, Sparkles, MessageSquare, ChevronDown, User, Flame, EyeOff, X } from 'lucide-react';
 import { firebaseService, LiveChatMessage } from '../lib/firebaseService';
 import { useAuth } from '../lib/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface LiveStreamChatProps {
   isAdmin?: boolean;
   className?: string;
+  onHide?: () => void;
 }
 
 const QUICK_REACTIONS = [
@@ -20,7 +21,7 @@ const QUICK_REACTIONS = [
   "Watching from USA 🇺🇸"
 ];
 
-export default function LiveStreamChat({ isAdmin = false, className = '' }: LiveStreamChatProps) {
+export default function LiveStreamChat({ isAdmin = false, className = '', onHide }: LiveStreamChatProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<LiveChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
@@ -173,6 +174,19 @@ export default function LiveStreamChat({ isAdmin = false, className = '' }: Live
             >
               <User size={11} className="text-gold" />
               <span className="max-w-[100px] truncate">{senderName || 'Set Name'}</span>
+            </button>
+          )}
+
+          {onHide && (
+            <button
+              type="button"
+              onClick={onHide}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 text-[11px] font-medium transition-all cursor-pointer group"
+              title="Hide live chat (Watch in full width theater mode)"
+              aria-label="Hide live chat"
+            >
+              <EyeOff size={12} className="group-hover:text-red-400 transition-colors" />
+              <span className="hidden sm:inline">Hide</span>
             </button>
           )}
         </div>

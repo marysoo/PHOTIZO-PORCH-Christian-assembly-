@@ -49,6 +49,7 @@ export interface LiveStream {
   streamId: string;
   platform: 'youtube' | 'vimeo';
   title?: string;
+  hideChat?: boolean;
 }
 
 export interface LiveChatMessage {

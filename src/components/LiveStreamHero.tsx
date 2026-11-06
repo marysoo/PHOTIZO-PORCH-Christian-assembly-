@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Settings, X, Save, Share2, Youtube, ExternalLink, Activity, Radio, HelpCircle, Check, Copy, Facebook, MessageSquare } from 'lucide-react';
+import { Play, Settings, X, Save, Share2, Youtube, ExternalLink, Activity, Radio, HelpCircle, Check, Copy, Facebook, MessageSquare, EyeOff, MessageSquareOff } from 'lucide-react';
 import { firebaseService, LiveStream } from '../lib/firebaseService';
 import { CONTACT_INFO } from '../constants';
 import LiveStreamChat from './LiveStreamChat';
@@ -47,13 +47,25 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
   const [showHowToHelp, setShowHowToHelp] = useState(false);
   const [rawInputUrl, setRawInputUrl] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(true);
-  
+  const [isChatOpen, setIsChatOpen] = useState(() => {
+    const saved = localStorage.getItem('photizo_hide_live_chat');
+    return saved === 'true' ? false : true;
+  });
+
+  const toggleChatVisibility = (nextValue?: boolean) => {
+    setIsChatOpen(prev => {
+      const resolved = nextValue !== undefined ? nextValue : !prev;
+      localStorage.setItem('photizo_hide_live_chat', String(!resolved));
+      return resolved;
+    });
+  };
+
   const [editForm, setEditForm] = useState<LiveStream>({
     isLive: false,
     streamId: '',
     platform: 'youtube',
-    title: ''
+    title: '',
+    hideChat: false
   });
 
   useEffect(() => {
@@ -88,6 +100,18 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
     const nextStatus = !stream?.isLive;
     await firebaseService.setLiveStatus(nextStatus);
   };
+
+  const handleToggleAdminChat = async (shouldHide: boolean) => {
+    if (!isAdmin) return;
+    if (stream) {
+      await firebaseService.updateStream({
+        ...stream,
+        hideChat: shouldHide
+      });
+    }
+  };
+
+  const isChatVisible = isChatOpen && !stream?.hideChat;
 
   const handleShare = () => {
     if (navigator.share) {
@@ -192,16 +216,31 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
 
             {/* Fellowship Live Chat Toggle Button */}
             <button
-              onClick={() => setIsChatOpen(!isChatOpen)}
+              onClick={() => {
+                if (stream?.hideChat && isAdmin) {
+                  handleToggleAdminChat(false);
+                } else {
+                  toggleChatVisibility();
+                }
+              }}
               className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-xs tracking-wider uppercase transition-all shadow-md cursor-pointer border ${
-                isChatOpen
-                  ? 'bg-gold/20 text-gold border-gold/40 shadow-[0_0_15px_var(--theme-glow-soft,rgba(212,175,55,0.2))]'
-                  : 'bg-zinc-900 text-zinc-300 hover:text-white border-zinc-800 hover:border-gold/50'
+                isChatVisible
+                  ? 'bg-zinc-900 text-zinc-300 hover:text-white border-zinc-800 hover:border-red-500/50'
+                  : 'bg-gold text-zinc-950 font-bold border-gold shadow-[0_0_15px_var(--theme-glow,rgba(212,175,55,0.3))]'
               }`}
-              title="Toggle Fellowship Real-Time Chat"
+              title={isChatVisible ? "Remove or hide live chat (Distraction-free theater view)" : "Open live fellowship chat"}
             >
-              <MessageSquare size={14} className={isChatOpen ? 'text-gold' : 'text-zinc-400'} />
-              <span>{isChatOpen ? 'Chat: Active' : 'Open Live Chat'}</span>
+              {isChatVisible ? (
+                <>
+                  <EyeOff size={14} className="text-zinc-400 group-hover:text-red-400" />
+                  <span>Hide Live Chat</span>
+                </>
+              ) : (
+                <>
+                  <MessageSquare size={14} className="text-zinc-950" />
+                  <span>Show Live Chat</span>
+                </>
+              )}
             </button>
 
             <button
@@ -215,9 +254,9 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
         </div>
 
         {/* Unified Live Broadcast Grid: Video Player + Real-Time Live Chat */}
-        <div className={`grid gap-6 items-stretch ${isChatOpen ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
+        <div className={`grid gap-6 items-stretch ${isChatVisible ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
           {/* Video Player Column */}
-          <div className={isChatOpen ? 'lg:col-span-2' : 'w-full'}>
+          <div className={isChatVisible ? 'lg:col-span-2' : 'w-full'}>
             <div className="relative aspect-video rounded-[2rem] overflow-hidden border border-zinc-800 bg-zinc-900 shadow-[0_0_80px_-15px_var(--theme-glow-soft,rgba(212,175,55,0.15))] group h-full min-h-[300px]">
               {stream?.isLive && stream?.streamId ? (
                 <div className="w-full h-full relative">
@@ -312,12 +351,47 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               )}
             </div>
+
+            {/* When Chat is Hidden: Distraction-free theater banner with quick restore action */}
+            {!isChatVisible && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md"
+              >
+                <div className="flex items-center gap-2.5 text-zinc-300">
+                  <MessageSquareOff size={16} className="text-gold shrink-0" />
+                  <span>
+                    {stream?.hideChat 
+                      ? "Live fellowship chat is currently paused by the ministry administrator."
+                      : "Live chat is hidden for theater viewing. You can bring back the fellowship chat whenever you wish."}
+                  </span>
+                </div>
+                {!stream?.hideChat ? (
+                  <button
+                    onClick={() => toggleChatVisibility(true)}
+                    className="px-4 py-2 rounded-xl bg-gold hover:brightness-110 text-zinc-950 font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer shadow-md"
+                  >
+                    <MessageSquare size={14} />
+                    <span>Show Live Chat</span>
+                  </button>
+                ) : isAdmin ? (
+                  <button
+                    onClick={() => handleToggleAdminChat(false)}
+                    className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-gold font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer border border-gold/40"
+                  >
+                    <MessageSquare size={14} />
+                    <span>Enable Chat for Congregation</span>
+                  </button>
+                ) : null}
+              </motion.div>
+            )}
           </div>
 
           {/* Real-Time Live Chat Column */}
-          {isChatOpen && (
+          {isChatVisible && (
             <div className="lg:col-span-1 h-[520px] lg:h-[560px] xl:h-[600px] w-full">
-              <LiveStreamChat isAdmin={isAdmin} />
+              <LiveStreamChat isAdmin={isAdmin} onHide={() => toggleChatVisibility(false)} />
             </div>
           )}
         </div>
@@ -402,6 +476,26 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                     className={`relative w-16 h-8 rounded-full p-1 transition-colors cursor-pointer ${editForm.isLive ? 'bg-red-600' : 'bg-zinc-800'}`}
                   >
                     <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${editForm.isLive ? 'translate-x-8' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Live Fellowship Chat Toggle (Admin) */}
+                <div className="flex items-center justify-between p-4 bg-zinc-950 rounded-2xl border border-zinc-800">
+                  <div>
+                    <h4 className="font-bold text-sm text-white">Fellowship Live Chat</h4>
+                    <p className="text-xs text-zinc-400">
+                      {editForm.hideChat 
+                        ? 'Chat is disabled and removed for all congregation members' 
+                        : 'Chat is enabled for real-time fellowship interactions'}
+                    </p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setEditForm(prev => ({ ...prev, hideChat: !prev.hideChat }))}
+                    className={`relative w-16 h-8 rounded-full p-1 transition-colors cursor-pointer ${!editForm.hideChat ? 'bg-gold' : 'bg-zinc-800'}`}
+                    title={editForm.hideChat ? "Click to enable live chat" : "Click to hide / remove live chat for congregation"}
+                  >
+                    <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${!editForm.hideChat ? 'translate-x-8' : ''}`} />
                   </button>
                 </div>
 

@@ -17,6 +17,7 @@ import SectionDivider from './components/SectionDivider';
 import TestimonialCarousel from './components/TestimonialCarousel';
 import Markdown from 'react-markdown';
 import ThemeSwitcher from './components/ThemeSwitcher';
+import StaffPortalModal from './components/StaffPortalModal';
 
 const renderHeroTitle = (title: string) => {
   let displayTitle = title;
@@ -178,15 +179,12 @@ export default function App() {
   const effectiveIsAdmin = actualIsAdmin && isEditMode;
 
   const [sections, setSections] = useState<PageSection[]>([]);
-  const [showPortal, setShowPortal] = useState(() => {
-    return localStorage.getItem('show_portal') === 'true' || actualIsAdmin;
-  });
+  const [isStaffPortalOpen, setIsStaffPortalOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('portal') === 'true' || params.get('admin') === 'true') {
-      localStorage.setItem('show_portal', 'true');
-      setShowPortal(true);
+      setIsStaffPortalOpen(true);
       const url = new URL(window.location.href);
       url.searchParams.delete('portal');
       url.searchParams.delete('admin');
@@ -331,6 +329,15 @@ export default function App() {
             <span className="sm:hidden">{isEditMode ? 'Edit: On' : 'Edit: Off'}</span>
           </button>
 
+          {/* Staff Portal Hub */}
+          <button
+            onClick={() => setIsStaffPortalOpen(true)}
+            className="p-2 bg-zinc-900 border border-zinc-800 text-gold hover:text-white rounded-full transition-colors cursor-pointer"
+            title="Open Staff & Admin Portal"
+          >
+            <ShieldCheck size={15} />
+          </button>
+
           {/* Admin Logout */}
           <button 
             onClick={logout}
@@ -365,7 +372,8 @@ export default function App() {
             <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Excellence & Revelation</span>
           </a>
           
-          <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium">
+          {/* Navigation Menu Links */}
+          <div className="hidden md:flex items-center gap-5 lg:gap-7 text-sm font-medium">
             <a href="#about" className="hover:text-gold transition-colors">About Us</a>
             <a href="#gallery" className="hover:text-gold transition-colors">Gallery</a>
             <a href="#calendar" className="hover:text-gold transition-colors">Calendar</a>
@@ -374,8 +382,11 @@ export default function App() {
             <a href="#testimonies" className="hover:text-gold transition-colors">Testimonies</a>
             <a href="#giving" className="hover:text-gold transition-colors">Giving</a>
             <a href="#contact" className="hover:text-gold transition-colors">Contact</a>
+          </div>
 
-            <ThemeSwitcher variant="navbar" />
+          {/* Standalone Action Controls - Distinctly Separated from Menu */}
+          <div className="hidden md:flex items-center gap-3 pl-4 border-l border-zinc-800/80">
+            <ThemeSwitcher variant="standalone" />
 
             <a 
               href="#live" 
@@ -399,9 +410,9 @@ export default function App() {
             </a>
           </div>
 
-          {/* Mobile Right Controls: Theme Quick Switcher + Hamburger Menu Button */}
-          <div className="md:hidden flex items-center gap-2">
-            <ThemeSwitcher variant="navbar" />
+          {/* Mobile Right Controls: Standalone Theme Switcher + Distinct Hamburger Menu Button */}
+          <div className="md:hidden flex items-center gap-2.5">
+            <ThemeSwitcher variant="standalone" />
             <button 
               className="flex items-center justify-center p-2.5 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition-all cursor-pointer" 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -412,7 +423,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Responsive Mobile Dropdown Menu */}
+        {/* Responsive Mobile Dropdown Menu - Scrollable */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div 
@@ -420,12 +431,9 @@ export default function App() {
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: -10, height: 0 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="md:hidden border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
+              className="md:hidden border-t border-zinc-900 bg-zinc-950/98 backdrop-blur-2xl shadow-2xl max-h-[calc(100vh-5rem)] overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-zinc-800"
             >
               <div className="p-6 flex flex-col gap-3">
-                {/* Mobile Theme Palette Selector */}
-                <ThemeSwitcher variant="mobile-inline" className="mb-2" />
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm font-medium">
                   <a 
                     href="#about" 
@@ -550,10 +558,11 @@ export default function App() {
                     </div>
                   ) : (
                     <button 
-                      onClick={() => { login(); setIsMenuOpen(false); }}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-gold border border-zinc-800 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                      onClick={() => { setIsStaffPortalOpen(true); setIsMenuOpen(false); }}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-gold border border-zinc-800 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-sm"
                     >
-                      <LogIn size={15} /> Staff & Admin Portal Sign In
+                      <ShieldCheck size={16} className="text-gold" />
+                      <span>Staff & Admin Portal Sign In</span>
                     </button>
                   )}
                 </div>
@@ -830,15 +839,22 @@ export default function App() {
             </a>
             {!actualIsAdmin ? (
               <button 
-                onClick={login}
-                className="hover:text-gold transition-colors cursor-pointer flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity"
+                onClick={() => setIsStaffPortalOpen(true)}
+                className="hover:text-gold transition-colors cursor-pointer flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity font-semibold"
+                title="Open Staff & Admin Portal"
               >
-                <LogIn size={12} /> Staff Portal
+                <ShieldCheck size={14} className="text-gold" />
+                <span>Staff Portal</span>
               </button>
             ) : (
-              <span className="text-gold flex items-center gap-1 animate-pulse">
-                <Sparkles size={14} /> Admin Active ({user?.email})
-              </span>
+              <button
+                onClick={() => setIsStaffPortalOpen(true)}
+                className="text-gold flex items-center gap-1.5 cursor-pointer hover:underline font-semibold"
+                title="Manage Sanctuary Controls & Staff Portal"
+              >
+                <Sparkles size={14} className="animate-pulse" />
+                <span>Admin Active ({user?.email})</span>
+              </button>
             )}
           </div>
         </div>
@@ -878,6 +894,16 @@ export default function App() {
 
       {/* Persistent Floating Theme Switcher Widget */}
       <ThemeSwitcher variant="floating" />
+
+      {/* Staff & Admin Portal Modal */}
+      <StaffPortalModal
+        isOpen={isStaffPortalOpen}
+        onClose={() => setIsStaffPortalOpen(false)}
+        isStreamLive={isStreamLive}
+        onToggleLive={handleToggleLiveDirect}
+        isEditMode={isEditMode}
+        onToggleEditMode={toggleEditMode}
+      />
     </div>
   );
 }

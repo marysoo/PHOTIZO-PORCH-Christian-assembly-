@@ -58,7 +58,8 @@
         "isLive": { "type": "boolean" },
         "streamId": { "type": "string", "description": "YouTube or Vimeo ID" },
         "platform": { "type": "string", "enum": ["youtube", "vimeo"] },
-        "title": { "type": "string" }
+        "title": { "type": "string" },
+        "hideChat": { "type": "boolean" }
       },
       "required": ["isLive", "streamId", "platform"]
     },

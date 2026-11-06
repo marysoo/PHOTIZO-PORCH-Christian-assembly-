@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ThemeSwitcherProps {
-  variant?: 'navbar' | 'floating' | 'mobile-inline';
+  variant?: 'navbar' | 'floating' | 'mobile-inline' | 'standalone';
   className?: string;
 }
 
@@ -111,7 +111,7 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
             />
           </button>
 
-          {/* Quick Swatch Popup Tray */}
+          {/* Quick Swatch Popup Tray - Scrollable */}
           <AnimatePresence>
             {isOpen && (
               <motion.div
@@ -119,9 +119,9 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 15, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="absolute bottom-14 left-0 mb-2 w-80 p-4 bg-zinc-950/95 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 z-50"
+                className="absolute bottom-14 left-0 mb-2 w-80 max-h-[75vh] overflow-y-auto overscroll-contain p-4 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 z-50 divide-y divide-zinc-900 scrollbar-thin scrollbar-thumb-zinc-700"
               >
-                <div className="flex items-center justify-between pb-2.5 border-b border-zinc-800/80 mb-3">
+                <div className="flex items-center justify-between pb-2.5 border-b border-zinc-800/80 mb-3 sticky top-0 bg-zinc-950/90 backdrop-blur-md pt-0 z-10">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-gold" />
                     <span className="text-xs font-bold text-white uppercase tracking-wider">Site Color Options</span>
@@ -129,7 +129,7 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
                   <span className="text-[10px] text-zinc-400 font-mono">3 Choices</span>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 pt-2">
                   {themes.map((theme) => {
                     const isSelected = theme.id === currentTheme.id;
                     return (
@@ -185,21 +185,28 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
     );
   }
 
-  // Variant: Standard Navbar Dropdown (Desktop)
+  // Variant: Standalone & Navbar Dropdown (Desktop & Standalone Mobile)
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-gold/50 text-xs font-semibold text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm group"
+        className="flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-zinc-900/95 hover:bg-zinc-850 border border-zinc-800 hover:border-gold/60 text-xs font-semibold text-zinc-200 hover:text-white transition-all cursor-pointer shadow-md group shrink-0"
+        style={{
+          boxShadow: isOpen ? `0 0 15px ${currentTheme.glowSoft}` : undefined
+        }}
         aria-label="Toggle site color theme"
       >
         <div
-          className="w-3.5 h-3.5 rounded-full shadow-sm ring-1 ring-white/20 transition-transform group-hover:scale-110"
+          className="w-4 h-4 rounded-full shadow-sm ring-1 ring-white/20 transition-transform group-hover:scale-110 flex items-center justify-center shrink-0 border border-white/20"
           style={{ background: currentTheme.swatchGradient }}
-        />
-        <span className="hidden lg:inline">{currentTheme.name}</span>
-        <span className="lg:hidden">Theme</span>
-        <ChevronDown size={13} className={`text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-gold' : ''}`} />
+        >
+          <Palette size={9} style={{ color: themeIconColor(currentTheme.id) }} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-zinc-400 text-[10px] uppercase font-bold tracking-wider hidden xl:inline">Color:</span>
+          <span className="font-bold text-zinc-100 group-hover:text-gold transition-colors">{currentTheme.name}</span>
+        </div>
+        <ChevronDown size={13} className={`text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-gold' : 'group-hover:text-zinc-200'}`} />
       </button>
 
       <AnimatePresence>
@@ -209,10 +216,10 @@ export default function ThemeSwitcher({ variant = 'navbar', className = '' }: Th
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute right-0 mt-2.5 w-84 p-3.5 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 z-50"
+            className="absolute right-0 mt-2.5 w-84 max-h-[75vh] overflow-y-auto overscroll-contain p-3.5 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 z-50 scrollbar-thin scrollbar-thumb-zinc-700"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-zinc-850">
+            <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-zinc-850 sticky top-0 bg-zinc-950/95 backdrop-blur-md pt-0 z-10">
               <div className="flex items-center gap-2">
                 <Palette className="w-4 h-4 text-gold" />
                 <div>

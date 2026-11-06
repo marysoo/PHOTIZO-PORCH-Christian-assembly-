@@ -20,9 +20,13 @@ import {
   Play,
   Pause,
   SlidersHorizontal,
-  Flame
+  Flame,
+  Layers,
+  FolderPlus,
+  CheckCircle2
 } from 'lucide-react';
 import { firebaseService, Excerpt } from '../lib/firebaseService';
+import { optimizeImageFile } from '../lib/imageOptimizer';
 
 interface ExcerptGalleryProps {
   isAdmin: boolean;
@@ -133,6 +137,20 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
   const [success, setSuccess] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Multi-Image Selector & Batch Upload State
+  const [pendingUploads, setPendingUploads] = useState<Array<{
+    id: string;
+    file: File;
+    dataUrl: string;
+    title: string;
+    category: string;
+    source: string;
+    sizeFormatted: string;
+  }>>([]);
+  const [isMultiUploadModalOpen, setIsMultiUploadModalOpen] = useState(false);
+  const [sharedMultiCategory, setSharedMultiCategory] = useState('Worship Atmosphere');
+  const [sharedMultiSource, setSharedMultiSource] = useState('Photizo Assembly');
+
   // Batch Uploading
   const [isBatchUploading, setIsBatchUploading] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
@@ -235,63 +253,132 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
       return;
     }
 
-    // Single file in form modal
-    if (validImages.length === 1 && isFormOpen) {
-      const file = validImages[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setImageUrl(event.target.result as string);
-          setError('');
-        }
-      };
-      reader.onerror = () => setError('Error reading image file.');
-      reader.readAsDataURL(file);
+    // Single file in form modal while editing an existing slide
+    if (editingExcerpt && isFormOpen && validImages.length === 1) {
+      try {
+        const dataUrl = await optimizeImageFile(validImages[0]);
+        setImageUrl(dataUrl);
+        setError('');
+      } catch (err: any) {
+        setError(err.message || 'Error processing image file.');
+      }
       return;
     }
 
-    // Batch or direct upload behind the scenes
+    // Process files for Multi-Image Selector modal
     setIsBatchUploading(true);
     setBatchProgress({ current: 0, total: validImages.length });
     setError('');
 
     try {
+      const newItems: Array<{
+        id: string;
+        file: File;
+        dataUrl: string;
+        title: string;
+        category: string;
+        source: string;
+        sizeFormatted: string;
+      }> = [];
+
       for (let i = 0; i < validImages.length; i++) {
         const file = validImages[i];
         setBatchProgress({ current: i + 1, total: validImages.length });
 
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) resolve(e.target.result as string);
-            else reject(new Error('Failed to read image.'));
-          };
-          reader.onerror = () => reject(new Error(`Error reading file ${file.name}`));
-          reader.readAsDataURL(file);
-        });
-
+        const dataUrl = await optimizeImageFile(file);
         const rawTitle = file.name
           .replace(/\.[^/.]+$/, "")
           .replace(/[-_]/g, " ")
           .replace(/\b\w/g, char => char.toUpperCase());
 
-        const isOutreach = rawTitle.toLowerCase().includes('humanitarian') || rawTitle.toLowerCase().includes('welfare') || rawTitle.toLowerCase().includes('outreach');
+        const isOutreach = rawTitle.toLowerCase().includes('humanitarian') || 
+                           rawTitle.toLowerCase().includes('welfare') || 
+                           rawTitle.toLowerCase().includes('outreach');
+
+        const sizeInKB = Math.round(file.size / 1024);
+        const sizeFormatted = sizeInKB > 1024 
+          ? `${(sizeInKB / 1024).toFixed(1)} MB` 
+          : `${sizeInKB} KB`;
+
+        newItems.push({
+          id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
+          file,
+          dataUrl,
+          title: rawTitle || `Sanctuary Photo ${i + 1}`,
+          category: isOutreach ? 'Love in Action' : sharedMultiCategory,
+          source: sharedMultiSource,
+          sizeFormatted
+        });
+      }
+
+      setPendingUploads(prev => [...prev, ...newItems]);
+      setIsMultiUploadModalOpen(true);
+      if (isFormOpen && !editingExcerpt) {
+        setIsFormOpen(false);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error processing selected photos.');
+    } finally {
+      setIsBatchUploading(false);
+      setBatchProgress(null);
+    }
+  };
+
+  const updatePendingTitle = (id: string, newTitle: string) => {
+    setPendingUploads(prev => prev.map(item => item.id === id ? { ...item, title: newTitle } : item));
+  };
+
+  const updatePendingCategory = (id: string, newCategory: string) => {
+    setPendingUploads(prev => prev.map(item => item.id === id ? { ...item, category: newCategory } : item));
+  };
+
+  const removePendingUpload = (id: string) => {
+    setPendingUploads(prev => {
+      const filtered = prev.filter(item => item.id !== id);
+      if (filtered.length === 0) {
+        setIsMultiUploadModalOpen(false);
+      }
+      return filtered;
+    });
+  };
+
+  const applySharedCategory = (cat: string) => {
+    setSharedMultiCategory(cat);
+    setPendingUploads(prev => prev.map(item => ({ ...item, category: cat })));
+  };
+
+  const applySharedSource = (src: string) => {
+    setSharedMultiSource(src);
+    setPendingUploads(prev => prev.map(item => ({ ...item, source: src })));
+  };
+
+  const handleBatchUploadAll = async () => {
+    if (pendingUploads.length === 0) return;
+    setIsBatchUploading(true);
+    setBatchProgress({ current: 0, total: pendingUploads.length });
+    setError('');
+
+    try {
+      for (let i = 0; i < pendingUploads.length; i++) {
+        const item = pendingUploads[i];
+        setBatchProgress({ current: i + 1, total: pendingUploads.length });
 
         const newExcerpt: Omit<Excerpt, 'id'> = {
-          text: rawTitle || 'Divine Encounter',
-          source: 'Photizo Assembly',
-          category: isOutreach ? 'Love in Action' : 'Worship Atmosphere',
-          imageUrl: dataUrl
+          text: item.title.trim() || 'Divine Encounter',
+          source: item.source.trim() || 'Photizo Assembly',
+          category: item.category || 'Worship Atmosphere',
+          imageUrl: item.dataUrl
         };
 
         await firebaseService.upsertExcerpt(newExcerpt);
       }
 
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-      if (isFormOpen) setIsFormOpen(false);
+      setPendingUploads([]);
+      setIsMultiUploadModalOpen(false);
+      setTimeout(() => setSuccess(false), 3500);
     } catch (err: any) {
-      setError(err.message || 'Error uploading photos.');
+      setError(err.message || 'Error uploading photos to gallery.');
     } finally {
       setIsBatchUploading(false);
       setBatchProgress(null);
@@ -432,9 +519,10 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
             {/* Admin Upload & Management */}
             {isAdmin && (
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-gold border border-gold/30 hover:border-gold px-4 py-2 rounded-full font-bold transition-all shadow-md cursor-pointer text-xs">
-                  <UploadCloud className="w-4 h-4 text-gold" />
-                  <span>Upload Photos</span>
+                <label className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-gold border border-gold/40 hover:border-gold px-4 py-2 rounded-full font-bold transition-all shadow-md cursor-pointer text-xs group">
+                  <UploadCloud className="w-4 h-4 text-gold group-hover:scale-110 transition-transform" />
+                  <span>Upload Photos (Multi-Select)</span>
+                  <span className="text-[10px] bg-gold/15 text-gold px-1.5 py-0.5 rounded-full border border-gold/30 font-mono hidden sm:inline">Multiple</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -836,6 +924,241 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
           )}
         </AnimatePresence>
 
+        {/* --- MULTI-IMAGE REVIEW & BATCH UPLOAD MODAL --- */}
+        <AnimatePresence>
+          {isMultiUploadModalOpen && (
+            <div className="fixed inset-0 z-[170] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="relative bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800 bg-zinc-950">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-gold/10 text-gold rounded-xl">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-white">Multi-Photo Gallery Upload</h3>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-gold text-zinc-950">
+                          {pendingUploads.length} Selected
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-400 font-mono mt-0.5">
+                        Review, edit captions, and batch-upload all authentic photos into the slideshow
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (!isBatchUploading) {
+                        setIsMultiUploadModalOpen(false);
+                      }
+                    }}
+                    disabled={isBatchUploading}
+                    className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Batch Settings Bar (apply to all) */}
+                <div className="px-6 py-3.5 bg-zinc-950/70 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-400 font-mono uppercase tracking-wider text-[11px]">Set All Categories:</span>
+                      <select
+                        value={sharedMultiCategory}
+                        onChange={(e) => applySharedCategory(e.target.value)}
+                        className="bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-gold text-xs"
+                      >
+                        <option value="Worship Atmosphere">Worship Atmosphere</option>
+                        <option value="Prophetic Altar">Prophetic Altar</option>
+                        <option value="Prophetic Word">Prophetic Word</option>
+                        <option value="Love in Action">Love in Action</option>
+                        <option value="Divine Encounters">Divine Encounters</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-400 font-mono uppercase tracking-wider text-[11px]">Source:</span>
+                      <input
+                        type="text"
+                        value={sharedMultiSource}
+                        onChange={(e) => applySharedSource(e.target.value)}
+                        placeholder="Source / Assembly"
+                        className="bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-white placeholder-zinc-500 focus:outline-none focus:border-gold text-xs w-36"
+                      />
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg font-medium cursor-pointer transition-colors shrink-0">
+                    <FolderPlus className="w-3.5 h-3.5 text-gold" />
+                    <span>Select More Photos</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Scrollable list of pending photos */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs">
+                      {error}
+                    </div>
+                  )}
+
+                  {pendingUploads.length === 0 ? (
+                    <div className="text-center py-12 text-zinc-500">
+                      <Layers className="w-10 h-10 mx-auto mb-2 opacity-40 text-gold" />
+                      <p className="text-sm">No photos selected yet.</p>
+                      <label className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-gold text-zinc-950 font-bold rounded-full text-xs cursor-pointer hover:bg-amber-400 transition-colors">
+                        <UploadCloud className="w-4 h-4" />
+                        <span>Choose Multiple Photos</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {pendingUploads.map((item, index) => (
+                        <div
+                          key={item.id}
+                          className="p-3.5 bg-zinc-950 rounded-2xl border border-zinc-800 hover:border-zinc-700 transition-colors flex gap-3.5 relative group"
+                        >
+                          {/* Thumbnail with Index Badge */}
+                          <div className="relative shrink-0 w-24 h-24 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+                            <img
+                              src={item.dataUrl}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                            <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-black/80 backdrop-blur-sm text-[10px] font-mono text-gold font-bold">
+                              #{index + 1}
+                            </span>
+                            <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/75 backdrop-blur-sm text-[9px] font-mono text-zinc-400">
+                              {item.sizeFormatted}
+                            </span>
+                          </div>
+
+                          {/* Editable Fields */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider block">
+                                Caption / Title:
+                              </label>
+                              <input
+                                type="text"
+                                value={item.title}
+                                onChange={(e) => updatePendingTitle(item.id, e.target.value)}
+                                placeholder="Enter photo caption..."
+                                className="w-full bg-zinc-900 border border-zinc-800 focus:border-gold rounded-lg px-2.5 py-1 text-xs text-white placeholder-zinc-600 focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-2">
+                              <select
+                                value={item.category}
+                                onChange={(e) => updatePendingCategory(item.id, e.target.value)}
+                                className="flex-1 bg-zinc-900 border border-zinc-800 focus:border-gold rounded-lg px-2 py-1 text-[11px] text-zinc-300 focus:outline-none truncate"
+                              >
+                                <option value="Worship Atmosphere">Worship Atmosphere</option>
+                                <option value="Prophetic Altar">Prophetic Altar</option>
+                                <option value="Prophetic Word">Prophetic Word</option>
+                                <option value="Love in Action">Love in Action</option>
+                                <option value="Divine Encounters">Divine Encounters</option>
+                              </select>
+
+                              <button
+                                type="button"
+                                onClick={() => removePendingUpload(item.id)}
+                                disabled={isBatchUploading}
+                                className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer disabled:opacity-40"
+                                title="Remove photo from upload list"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Progress Indicator */}
+                {isBatchUploading && batchProgress && (
+                  <div className="px-6 py-3 bg-zinc-950/90 border-t border-zinc-800">
+                    <div className="flex items-center justify-between text-xs text-zinc-300 mb-1.5">
+                      <span className="flex items-center gap-2">
+                        <UploadCloud className="w-4 h-4 text-gold animate-bounce" />
+                        <span>Uploading photo {batchProgress.current} of {batchProgress.total}...</span>
+                      </span>
+                      <span className="font-mono text-gold font-bold">
+                        {Math.round((batchProgress.current / batchProgress.total) * 100)}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gold transition-all duration-300 ease-out"
+                        style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Controls */}
+                <div className="px-6 py-4 border-t border-zinc-800 bg-zinc-950 flex flex-wrap items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingUploads([]);
+                      setIsMultiUploadModalOpen(false);
+                    }}
+                    disabled={isBatchUploading}
+                    className="px-4 py-2 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-full text-xs transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-zinc-500 font-mono hidden sm:inline">
+                      {pendingUploads.length} photo{pendingUploads.length === 1 ? '' : 's'} ready
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleBatchUploadAll}
+                      disabled={isBatchUploading || pendingUploads.length === 0}
+                      className="flex items-center gap-2 px-6 py-2.5 bg-gold hover:bg-amber-400 text-zinc-950 font-bold rounded-full text-xs shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>
+                        {isBatchUploading
+                          ? `Uploading (${batchProgress?.current || 0}/${batchProgress?.total || pendingUploads.length})...`
+                          : `Upload All (${pendingUploads.length}) to Gallery`}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* --- ADD / EDIT FORM MODAL --- */}
         <AnimatePresence>
           {isFormOpen && (
@@ -946,12 +1269,13 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={handleFileChange}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         />
                         <UploadCloud className="w-8 h-8 text-gold animate-bounce" />
                         <div className="text-xs text-zinc-300">
-                          <span className="text-gold font-bold">Click to choose image</span> or drag & drop here
+                          <span className="text-gold font-bold">Click to choose photos (multi-select enabled)</span> or drag & drop here
                         </div>
                       </div>
 

@@ -79,7 +79,7 @@ export default function GivingHub() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute z-50 w-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl"
+                  className="absolute z-50 w-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-zinc-700"
                 >
                   {GIVING_OPTIONS.map((option) => (
                     <button
@@ -135,7 +135,7 @@ export default function GivingHub() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute z-50 w-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl divide-y divide-zinc-800/40"
+                  className="absolute z-50 w-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl divide-y divide-zinc-800/40 max-h-72 overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-zinc-700"
                 >
                   {/* Local Option */}
                   <button

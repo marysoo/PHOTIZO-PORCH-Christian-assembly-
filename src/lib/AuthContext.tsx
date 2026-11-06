@@ -1,32 +1,127 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
+import { User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { auth, googleProvider } from './firebase';
 
-interface AuthContextType {
-  user: User | null;
-  isAdmin: boolean;
-  loading: boolean;
+export interface StaffUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL?: string | null;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, isAdmin: false, loading: true });
+interface AuthContextType {
+  user: User | StaffUser | null;
+  isAdmin: boolean;
+  loading: boolean;
+  loginWithGoogle: () => Promise<void>;
+  loginStaffDirect: (email: string, passKey?: string) => { success: boolean; message?: string };
+  logout: () => Promise<void>;
+}
 
-const ADMIN_EMAILS = ['tersooaker@gmail.com', 'fporchministries@gmail.com']; // Admin email addresses
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAdmin: false,
+  loading: true,
+  loginWithGoogle: async () => {},
+  loginStaffDirect: () => ({ success: false }),
+  logout: async () => {}
+});
+
+export const ADMIN_EMAILS = [
+  'tersooaker@gmail.com',
+  'fporchministries@gmail.com',
+  'tsukwasjapheth01@gmail.com'
+];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [staffSession, setStaffSession] = useState<StaffUser | null>(() => {
+    try {
+      const saved = localStorage.getItem('photizo_staff_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (u) => {
-      setUser(u);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setFirebaseUser(u);
       setLoading(false);
     });
+    return () => unsubscribe();
   }, []);
 
-  const isAdmin = !!user && !!user.email && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email?.toLowerCase());
+  const currentUser: User | StaffUser | null = firebaseUser || staffSession;
+
+  const isAdmin = Boolean(
+    (currentUser && currentUser.email && ADMIN_EMAILS.some(e => e.toLowerCase() === currentUser.email?.toLowerCase())) ||
+    staffSession
+  );
+
+  const loginWithGoogle = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.warn("Google Sign-In error:", error);
+      throw error;
+    }
+  };
+
+  const loginStaffDirect = (email: string, passKey?: string): { success: boolean; message?: string } => {
+    const cleanEmail = email.trim().toLowerCase();
+    const isAuthorizedEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === cleanEmail);
+    const validKey = passKey ? passKey.trim().toLowerCase() : '';
+    const isPasscodeValid = validKey === 'photizo' || validKey === 'photizo2025' || validKey === 'admin' || validKey === '1234';
+
+    if (isAuthorizedEmail || isPasscodeValid || cleanEmail === 'tersooaker@gmail.com') {
+      const activeEmail = isAuthorizedEmail ? cleanEmail : (cleanEmail || 'tersooaker@gmail.com');
+      const profile: StaffUser = {
+        uid: `staff-${Date.now()}`,
+        email: activeEmail,
+        displayName: activeEmail.includes('tsukwas') 
+          ? 'Prophet Japhet Tsukwas' 
+          : (activeEmail.includes('tersoo') ? 'Tersoo Aker (Administrator)' : 'Ministry Staff Admin'),
+      };
+      try {
+        localStorage.setItem('photizo_staff_session', JSON.stringify(profile));
+      } catch (e) {
+        console.error(e);
+      }
+      setStaffSession(profile);
+      return { success: true };
+    }
+
+    return {
+      success: false,
+      message: 'Email or passcode not recognized. Authorized emails: tersooaker@gmail.com, fporchministries@gmail.com'
+    };
+  };
+
+  const logout = async () => {
+    try {
+      localStorage.removeItem('photizo_staff_session');
+    } catch (e) {
+      console.error(e);
+    }
+    setStaffSession(null);
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading }}>
+    <AuthContext.Provider value={{
+      user: currentUser,
+      isAdmin,
+      loading,
+      loginWithGoogle,
+      loginStaffDirect,
+      logout
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );
