@@ -48,7 +48,9 @@ service cloud.firestore {
     function isValidStream(data) {
       return data.streamId is string && data.platform in ['youtube', 'vimeo'] && data.isLive is bool &&
              (!('title' in data) || (data.title is string && data.title.size() <= 200)) &&
-             (!('hideChat' in data) || data.hideChat is bool);
+             (!('hideChat' in data) || data.hideChat is bool) &&
+             (!('defaultVideoId' in data) || (data.defaultVideoId is string && data.defaultVideoId.size() <= 200)) &&
+             (!('defaultVideoTitle' in data) || (data.defaultVideoTitle is string && data.defaultVideoTitle.size() <= 200));
     }
 
     function isValidEvent(data) {

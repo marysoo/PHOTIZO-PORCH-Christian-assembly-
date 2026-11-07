@@ -45,7 +45,7 @@ export default function PrayerSystem({ isAdmin }: { isAdmin: boolean }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl font-serif mb-6 glow-text">Covenant Prayer altar</h2>
+          <h2 className="text-4xl font-serif mb-6 glow-text">Covenant Prayer Altar</h2>
           <p className="text-zinc-400 mb-10 max-w-2xl mx-auto">
             "For where two or three are gathered together in my name, there am I in the midst of them." Submit your petitions to our intercessory team.
           </p>

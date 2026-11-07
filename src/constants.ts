@@ -33,7 +33,7 @@ export const BANK_DETAILS = {
     description: "For local tithes, offerings, seeds, and partnership in Nigeria"
   },
   dom: {
-    bankName: "KEYSTONE BANK LIMITED",
+    bankName: "KEYSTONE BANK / SKY BANK DOM",
     accountName: "PHOTIZO PORCH CHRISTIAN ASSEMBLY",
     accountNumber: "1014165093",
     iban: "GB90CITI18500812690365",

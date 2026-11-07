@@ -21,6 +21,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { firebaseService, ChurchEvent } from '../lib/firebaseService';
+import { optimizeImageFile } from '../lib/imageOptimizer';
 
 // Pre-defined categories
 const CATEGORIES = [
@@ -66,24 +67,20 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  // Process image file preserving raw unenhanced state
-  const processEventImageFile = (file: File) => {
+  // Process image file with client-side optimization to prevent oversized storage
+  const processEventImageFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       setFormError('Please select a valid image file (PNG, JPG, WEBP, etc.)');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setFormImageUrl(event.target.result as string);
-        setFormError('');
-      }
-    };
-    reader.onerror = () => {
-      setFormError('Failed to read image file.');
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await optimizeImageFile(file);
+      setFormImageUrl(dataUrl);
+      setFormError('');
+    } catch {
+      setFormError('Failed to process image file.');
+    }
   };
 
   // Fetch events from Firestore

@@ -147,6 +147,25 @@
         "role": { "type": "string", "enum": ["member", "pastor", "admin"] }
       },
       "required": ["senderName", "message", "createdAt"]
+    },
+    "SermonVideo": {
+      "title": "Sermon Existing Video or Playlist",
+      "description": "Video sermon, live replay, or YouTube playlist from the sanctuary archive",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "speaker": { "type": "string" },
+        "category": { "type": "string" },
+        "date": { "type": "string" },
+        "description": { "type": "string" },
+        "duration": { "type": "string" },
+        "videoOrPlaylistId": { "type": "string" },
+        "youtubeUrl": { "type": "string" },
+        "isPlaylist": { "type": "boolean" },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "speaker", "videoOrPlaylistId", "category"]
     }
   },
   "firestore": {
@@ -193,6 +212,10 @@
     "/liveChatMessages/{messageId}": {
       "schema": "LiveChatMessage",
       "description": "Live fellowship chat stream messages"
+    },
+    "/sermonVideos/{videoId}": {
+      "schema": "SermonVideo",
+      "description": "Sermon existing videos, replays, and YouTube playlists for the sanctuary player"
     }
   }
 }

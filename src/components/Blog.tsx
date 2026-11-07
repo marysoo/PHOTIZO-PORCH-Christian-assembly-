@@ -16,6 +16,7 @@ import {
   FileText
 } from 'lucide-react';
 import { firebaseService, BlogPost } from '../lib/firebaseService';
+import { optimizeImageFile } from '../lib/imageOptimizer';
 
 interface BlogProps {
   isAdmin: boolean;
@@ -89,24 +90,20 @@ export default function Blog({ isAdmin }: BlogProps) {
     }
   };
 
-  // Image Upload - preserves 100% original form without canvas compression or AI manipulation
-  const processImageFile = (file: File) => {
+  // Image Upload - client-side optimized to fit reliably in cloud storage
+  const processImageFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       setFormError('Please select a valid image file (PNG, JPG, WEBP, etc.)');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setImageUrl(event.target.result as string);
-        setFormError('');
-      }
-    };
-    reader.onerror = () => {
-      setFormError('Failed to read image file.');
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await optimizeImageFile(file);
+      setImageUrl(dataUrl);
+      setFormError('');
+    } catch {
+      setFormError('Failed to process image file.');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

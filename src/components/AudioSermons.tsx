@@ -152,6 +152,7 @@ export default function AudioSermons({ isAdmin }: AudioSermonsProps) {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('ended', handleEnded);
+      audio.pause();
     };
   }, []);
 

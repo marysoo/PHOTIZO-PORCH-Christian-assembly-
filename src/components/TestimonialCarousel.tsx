@@ -95,7 +95,7 @@ export default function TestimonialCarousel({ isAdmin }: TestimonialCarouselProp
   const pendingCount = testimonials.filter(t => t.status === 'pending').length;
 
   // Safe current index clamp
-  const activeIndex = displayItems.length > 0 ? (currentIndex % displayItems.length) : 0;
+  const activeIndex = displayItems.length > 0 ? (((currentIndex % displayItems.length) + displayItems.length) % displayItems.length) : 0;
   const currentTestimonial = displayItems[activeIndex];
 
   const handleNext = useCallback(() => {

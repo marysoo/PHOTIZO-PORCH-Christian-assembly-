@@ -82,7 +82,86 @@ export interface Sermon {
   description: string;
   category: string;
   duration?: string;
+  videoUrl?: string; // Optional YouTube video or playlist link
 }
+
+export interface SermonVideo {
+  id?: string;
+  title: string;
+  speaker: string;
+  category: string;
+  date?: string;
+  description: string;
+  duration?: string;
+  videoOrPlaylistId: string; // Extracted YouTube video ID or playlist ID
+  youtubeUrl?: string; // Full URL or user input
+  isPlaylist?: boolean;
+  order?: number;
+  createdAt?: string;
+}
+
+export const INITIAL_SERMON_VIDEOS: Omit<SermonVideo, 'id'>[] = [
+  {
+    title: "Prophetic Clinic & Supernatural Impartation",
+    category: "Prophetic Altar",
+    speaker: "Prophet Japhet Tsukwas",
+    date: "Service Replay",
+    description: "Deep prophetic ministration, healing declarations, and opening of spiritual eyes for divine breakthroughs.",
+    duration: "1:45:20",
+    videoOrPlaylistId: "gYjT55c-k_A",
+    youtubeUrl: "https://www.youtube.com/watch?v=gYjT55c-k_A",
+    isPlaylist: false,
+    order: 1
+  },
+  {
+    title: "Hour of Divine Worship & Apostolic Glory",
+    category: "Worship Atmosphere",
+    speaker: "Photizo Assembly",
+    date: "Worship Session",
+    description: "Intense worship, apostolic prayers, and glorious presence of God at the Photizo Porch altar.",
+    duration: "58:40",
+    videoOrPlaylistId: "3JZ_D3ELwOQ",
+    youtubeUrl: "https://www.youtube.com/watch?v=3JZ_D3ELwOQ",
+    isPlaylist: false,
+    order: 2
+  },
+  {
+    title: "The Mystery of Spiritual Discernment & Kingdom Culture",
+    category: "Prophetic Word",
+    speaker: "Prophet Japhet Tsukwas",
+    date: "Midweek Encounter",
+    description: "Understanding the spiritual senses, navigating life's choices with divine discernment, and staying aligned with the Spirit.",
+    duration: "1:12:15",
+    videoOrPlaylistId: "tgbNymZ7vqY",
+    youtubeUrl: "https://www.youtube.com/watch?v=tgbNymZ7vqY",
+    isPlaylist: false,
+    order: 3
+  },
+  {
+    title: "Communion of Power, Light & Healing Altar",
+    category: "Divine Encounters",
+    speaker: "Prophet Japhet Tsukwas",
+    date: "Communion Service",
+    description: "Releasing the supernatural life through the blood and body of Christ with testimonies of divine deliverance.",
+    duration: "1:30:10",
+    videoOrPlaylistId: "fJ9rUzIMcZQ",
+    youtubeUrl: "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
+    isPlaylist: false,
+    order: 4
+  },
+  {
+    title: "Prophetic Declarations for Supernatural Advancement",
+    category: "Prophetic Altar",
+    speaker: "Prophet Japhet Tsukwas",
+    date: "Prophetic Watch",
+    description: "Apostolic decrees and prophetic blessings unlocking doors of elevation, peace, and spiritual authority.",
+    duration: "48:30",
+    videoOrPlaylistId: "kJQP7kiw5Fk",
+    youtubeUrl: "https://www.youtube.com/watch?v=kJQP7kiw5Fk",
+    isPlaylist: false,
+    order: 5
+  }
+];
 
 export interface Excerpt {
   id?: string;
@@ -541,6 +620,62 @@ export const firebaseService = {
     } catch (error) {
       // Non-blocking fallback handled gracefully
       console.warn("Testimonial seeding note:", error);
+    }
+  },
+
+  // Sermon Existing Videos & Playlists
+  subscribeSermonVideos(callback: (videos: SermonVideo[]) => void) {
+    const path = 'sermonVideos';
+    const q = query(collection(db, path), orderBy('order', 'asc'));
+    return onSnapshot(q, (snap) => {
+      const videos = snap.docs.map(d => ({ id: d.id, ...d.data() } as SermonVideo));
+      callback(videos);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+    });
+  },
+
+  async upsertSermonVideo(video: SermonVideo) {
+    const videoId = video.id || `video_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const path = `sermonVideos/${videoId}`;
+    const { id, ...data } = video;
+    try {
+      const cleanData = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== undefined)
+      );
+      await setDoc(doc(db, 'sermonVideos', videoId), cleanData);
+      return videoId;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  },
+
+  async deleteSermonVideo(videoId: string) {
+    const path = `sermonVideos/${videoId}`;
+    try {
+      await deleteDoc(doc(db, 'sermonVideos', videoId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+      throw error;
+    }
+  },
+
+  async seedInitialSermonVideos() {
+    try {
+      const snap = await getDocs(collection(db, 'sermonVideos'));
+      if (snap.empty) {
+        for (let i = 0; i < INITIAL_SERMON_VIDEOS.length; i++) {
+          const item = INITIAL_SERMON_VIDEOS[i];
+          const id = `seed_vid_${i + 1}`;
+          await setDoc(doc(db, 'sermonVideos', id), {
+            ...item,
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+    } catch (error) {
+      console.warn("Sermon videos initial seed notice:", error);
     }
   }
 };
