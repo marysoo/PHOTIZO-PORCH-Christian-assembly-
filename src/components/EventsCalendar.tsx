@@ -618,6 +618,8 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
                             <img 
                               src={evt.imageUrl} 
                               alt={evt.title} 
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
                               referrerPolicy="no-referrer"
                             />
@@ -765,7 +767,14 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
                   
                   {formImageUrl ? (
                     <div className="relative rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 group/img">
-                      <img src={formImageUrl} alt="Event Preview" className="w-full h-40 object-cover" referrerPolicy="no-referrer" />
+                      <img 
+                        src={formImageUrl} 
+                        alt="Event Preview" 
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-40 object-cover" 
+                        referrerPolicy="no-referrer" 
+                      />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-3">
                         <button
                           type="button"
@@ -857,6 +866,8 @@ export default function EventsCalendar({ isAdmin }: EventsCalendarProps) {
                 <img
                   src={selectedPhotoUrl}
                   alt="Event Photo Full View"
+                  loading="lazy"
+                  decoding="async"
                   className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-zinc-800"
                   referrerPolicy="no-referrer"
                 />

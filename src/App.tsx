@@ -240,7 +240,7 @@ export default function App() {
             subtitle: `An oasis of revelation led by ${LEADERS.prophet} and ${LEADERS.pastor}.`,
             content: "Through your giving, we are able to reach the world with the message of illumination and excellence. Your seed is a testimony of your faith.",
             order: 0,
-            imageUrl: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=2061&auto=format&fit=crop"
+            imageUrl: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=75&w=1280&auto=format&fit=crop"
           },
           {
             sectionId: 'about',
@@ -644,6 +644,8 @@ export default function App() {
                           <img 
                             src={section.imageUrl} 
                             alt="Ministry" 
+                            loading="lazy"
+                            decoding="async"
                             onClick={() => setAboutLightboxUrl(section.imageUrl!)}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105 cursor-pointer"
                             title="Click to view original photo full screen"
@@ -743,7 +745,14 @@ export default function App() {
                 <div className="max-w-4xl mx-auto">
                   <h2 className="text-4xl font-serif mb-8 glow-text">{section.title}</h2>
                   {section.imageUrl && (
-                    <img src={section.imageUrl} className="w-full h-64 object-cover rounded-3xl mb-8" alt={section.title} referrerPolicy="no-referrer" />
+                    <img 
+                      src={section.imageUrl} 
+                      className="w-full h-64 object-cover rounded-3xl mb-8" 
+                      alt={section.title} 
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer" 
+                    />
                   )}
                   <div className="prose prose-invert text-zinc-400 text-lg">
                     <Markdown>{section.content}</Markdown>
@@ -883,6 +892,8 @@ export default function App() {
                 <img
                   src={aboutLightboxUrl}
                   alt="Original About Photo"
+                  loading="lazy"
+                  decoding="async"
                   className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-zinc-800"
                   referrerPolicy="no-referrer"
                 />

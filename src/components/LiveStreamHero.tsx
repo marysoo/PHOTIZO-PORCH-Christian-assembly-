@@ -382,6 +382,7 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                   <iframe 
                     className="w-full h-full border-0"
                     src={embedUrl}
+                    loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                     title={activeTitle}
@@ -751,6 +752,7 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                       <iframe 
                         className="w-full h-full border-0"
                         src={buildEmbedUrl(editForm.streamId, editForm.platform, { autoplay: false })}
+                        loading="lazy"
                         title="Stream Preview"
                       />
                     </div>

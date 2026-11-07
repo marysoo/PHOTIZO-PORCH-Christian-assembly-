@@ -37,55 +37,55 @@ const DEFAULT_AUTHENTIC_EXCERPTS: Excerpt[] = [
     text: "Hour of Divine Worship",
     source: "Photizo Assembly",
     category: "Worship Atmosphere",
-    imageUrl: "/user_uploads/upload_0_Hour_of_worship.jpeg"
+    imageUrl: "/user_uploads/upload_0_Hour_of_worship.webp"
   },
   {
     text: "Deep Fellowship in His Presence",
     source: "Photizo Assembly",
     category: "Worship Atmosphere",
-    imageUrl: "/user_uploads/upload_1_Hour_of_worship.jpeg"
+    imageUrl: "/user_uploads/upload_1_Hour_of_worship.webp"
   },
   {
     text: "Prayers of Intercession & Power",
     source: "Prophet Japhet Tsukwas",
     category: "Prophetic Altar",
-    imageUrl: "/user_uploads/upload_2_Prayers___.jpeg"
+    imageUrl: "/user_uploads/upload_2_Prayers___.webp"
   },
   {
     text: "Atmosphere of Intense Praise & Honor",
     source: "Photizo Assembly",
     category: "Worship Atmosphere",
-    imageUrl: "/user_uploads/upload_3_Worship.jpeg"
+    imageUrl: "/user_uploads/upload_3_Worship.webp"
   },
   {
     text: "Engrossed in the Glory of His Presence",
     source: "Prophet Japhet Tsukwas",
     category: "Prophetic Word",
-    imageUrl: "/user_uploads/upload_6_Engrossed_in_worship.jpeg"
+    imageUrl: "/user_uploads/upload_6_Engrossed_in_worship.webp"
   },
   {
     text: "Humanitarian Outreach & Welfare Service",
     source: "Photizo Outreach Team",
     category: "Love in Action",
-    imageUrl: "/user_uploads/upload_9_Humanitarian_service.jpeg"
+    imageUrl: "/user_uploads/upload_9_Humanitarian_service.webp"
   },
   {
     text: "Hands of Honor: Serving Our Community",
     source: "Photizo Outreach Team",
     category: "Love in Action",
-    imageUrl: "/user_uploads/upload_10_Humanitarian_service.jpeg"
+    imageUrl: "/user_uploads/upload_10_Humanitarian_service.webp"
   },
   {
     text: "Empowering Families with Essential Care",
     source: "Photizo Outreach Team",
     category: "Love in Action",
-    imageUrl: "/user_uploads/upload_11_Humanitarian_service.jpeg"
+    imageUrl: "/user_uploads/upload_11_Humanitarian_service.webp"
   },
   {
     text: "Joyful Giving & Practical Kingdom Love",
     source: "Photizo Outreach Team",
     category: "Love in Action",
-    imageUrl: "/user_uploads/upload_12_Humanitarian_service.jpeg"
+    imageUrl: "/user_uploads/upload_12_Humanitarian_service.webp"
   }
 ];
 
@@ -220,6 +220,22 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isPlaying, displayExcerpts.length, currentIndex]);
+
+  // Preload adjacent slide images for instant, zero-flicker transitions
+  useEffect(() => {
+    if (displayExcerpts.length <= 1) return;
+    const nextIdx = (currentIndex + 1) % displayExcerpts.length;
+    const prevIdx = (currentIndex - 1 + displayExcerpts.length) % displayExcerpts.length;
+    const preload = (url?: string) => {
+      if (url && typeof window !== 'undefined') {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+      }
+    };
+    preload(displayExcerpts[nextIdx]?.imageUrl);
+    preload(displayExcerpts[prevIdx]?.imageUrl);
+  }, [currentIndex, displayExcerpts]);
 
   // Handle Drag & Drop Batch Uploads
   const handleDragOver = (e: React.DragEvent) => {
@@ -610,6 +626,8 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                   src={currentSlide.imageUrl} 
                   alt={currentSlide.text || "Ministry Photo"} 
                   className="w-full h-full object-cover"
+                  decoding="async"
+                  fetchPriority="high"
                   referrerPolicy="no-referrer"
                 />
 
@@ -793,6 +811,8 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                   <img
                     src={displayExcerpts[lightboxIndex].imageUrl}
                     alt={displayExcerpts[lightboxIndex].text}
+                    loading="lazy"
+                    decoding="async"
                     className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                     referrerPolicy="no-referrer"
                   />
@@ -867,6 +887,8 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                           src={item.imageUrl} 
                           alt={item.text} 
                           className="w-16 h-16 rounded-xl object-cover border border-zinc-800 shrink-0"
+                          loading="lazy"
+                          decoding="async"
                           referrerPolicy="no-referrer"
                         />
                         <div className="flex-1 min-w-0">
@@ -1044,6 +1066,8 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                             <img
                               src={item.dataUrl}
                               alt={item.title}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
                             />
@@ -1284,6 +1308,8 @@ export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
                           <img 
                             src={imageUrl} 
                             alt="Selected" 
+                            loading="lazy"
+                            decoding="async"
                             className="w-16 h-16 rounded-lg object-cover border border-zinc-800"
                             referrerPolicy="no-referrer"
                           />

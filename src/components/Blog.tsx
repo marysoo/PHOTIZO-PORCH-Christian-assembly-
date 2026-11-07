@@ -274,6 +274,8 @@ export default function Blog({ isAdmin }: BlogProps) {
                     <img
                       src={post.imageUrl}
                       alt={post.title}
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -380,6 +382,8 @@ export default function Blog({ isAdmin }: BlogProps) {
                     <img
                       src={selectedPost.imageUrl}
                       alt={selectedPost.title}
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
                     />
@@ -594,6 +598,8 @@ export default function Blog({ isAdmin }: BlogProps) {
                         <img 
                           src={imageUrl} 
                           alt="Banner preview" 
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-48 object-cover opacity-80"
                         />
                         <div className="absolute inset-0 bg-zinc-950/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

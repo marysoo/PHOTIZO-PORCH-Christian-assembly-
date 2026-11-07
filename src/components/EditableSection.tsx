@@ -113,6 +113,8 @@ export default function EditableSection({ section, isAdmin, children }: Editable
                       <img 
                         src={formData.imageUrl} 
                         alt="Section Preview" 
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-44 object-cover" 
                         referrerPolicy="no-referrer" 
                       />
@@ -192,6 +194,8 @@ export default function EditableSection({ section, isAdmin, children }: Editable
               <img
                 src={previewPhoto}
                 alt="Original Photo View"
+                loading="lazy"
+                decoding="async"
                 className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-zinc-800"
                 referrerPolicy="no-referrer"
               />
