@@ -237,6 +237,260 @@ export const INITIAL_TESTIMONIALS: Omit<Testimonial, 'id'>[] = [
   }
 ];
 
+// --- AUTHENTIC MINISTRY DEFAULT DATASETS (INSTANT 0MS FIRST PAINT) ---
+
+export const DEFAULT_AUTHENTIC_EXCERPTS: Excerpt[] = [
+  {
+    text: "Hour of Divine Worship",
+    source: "Photizo Assembly",
+    category: "Worship Atmosphere",
+    imageUrl: "/user_uploads/upload_0_Hour_of_worship.webp"
+  },
+  {
+    text: "Deep Fellowship in His Presence",
+    source: "Photizo Assembly",
+    category: "Worship Atmosphere",
+    imageUrl: "/user_uploads/upload_1_Hour_of_worship.webp"
+  },
+  {
+    text: "Prayers of Intercession & Power",
+    source: "Prophet Japhet Tsukwas",
+    category: "Prophetic Altar",
+    imageUrl: "/user_uploads/upload_2_Prayers___.webp"
+  },
+  {
+    text: "Atmosphere of Intense Praise & Honor",
+    source: "Photizo Assembly",
+    category: "Worship Atmosphere",
+    imageUrl: "/user_uploads/upload_3_Worship.webp"
+  },
+  {
+    text: "Worship in the Beauty of Holiness",
+    source: "Photizo Assembly",
+    category: "Worship Atmosphere",
+    imageUrl: "/user_uploads/upload_4_Worship.webp"
+  },
+  {
+    text: "Lifting Holy Hands in Adoration",
+    source: "Photizo Assembly",
+    category: "Worship Atmosphere",
+    imageUrl: "/user_uploads/upload_5_Worship.webp"
+  },
+  {
+    text: "Engrossed in the Glory of His Presence",
+    source: "Prophet Japhet Tsukwas",
+    category: "Prophetic Word",
+    imageUrl: "/user_uploads/upload_6_Engrossed_in_worship.webp"
+  },
+  {
+    text: "Apostolic Impartation & Prayers",
+    source: "Prophet Japhet Tsukwas",
+    category: "Prophetic Altar",
+    imageUrl: "/user_uploads/upload_7_Hour_of_worship.webp"
+  },
+  {
+    text: "Supernatural Encounters at the Altar",
+    source: "Prophet Japhet Tsukwas",
+    category: "Prophetic Altar",
+    imageUrl: "/user_uploads/upload_8_Hour_of_worship.webp"
+  },
+  {
+    text: "Humanitarian Outreach & Welfare Service",
+    source: "Photizo Outreach Team",
+    category: "Love in Action",
+    imageUrl: "/user_uploads/upload_9_Humanitarian_service.webp"
+  },
+  {
+    text: "Hands of Honor: Serving Our Community",
+    source: "Photizo Outreach Team",
+    category: "Love in Action",
+    imageUrl: "/user_uploads/upload_10_Humanitarian_service.webp"
+  },
+  {
+    text: "Empowering Families with Essential Care",
+    source: "Photizo Outreach Team",
+    category: "Love in Action",
+    imageUrl: "/user_uploads/upload_11_Humanitarian_service.webp"
+  },
+  {
+    text: "Joyful Giving & Practical Kingdom Love",
+    source: "Photizo Outreach Team",
+    category: "Love in Action",
+    imageUrl: "/user_uploads/upload_12_Humanitarian_service.webp"
+  },
+  {
+    text: "Compassion in Action: Reaching the Needy",
+    source: "Photizo Outreach Team",
+    category: "Love in Action",
+    imageUrl: "/user_uploads/upload_13_Humanitarian_service.webp"
+  },
+  {
+    text: "Spreading Christ's Love to All People",
+    source: "Photizo Outreach Team",
+    category: "Love in Action",
+    imageUrl: "/user_uploads/upload_14_Humanitarian_service.webp"
+  },
+  {
+    text: "Ministering to the Widows & Vulnerable",
+    source: "Photizo Outreach Team",
+    category: "Love in Action",
+    imageUrl: "/user_uploads/upload_15_Humanitarian_service.webp"
+  },
+  {
+    text: "Extending the Light of Hope Everywhere",
+    source: "Photizo Outreach Team",
+    category: "Love in Action",
+    imageUrl: "/user_uploads/upload_16_Humanitarian_service.webp"
+  }
+];
+
+export const DEFAULT_STREAM: LiveStream = {
+  isLive: false,
+  streamId: 'gYjT55c-k_A',
+  platform: 'youtube',
+  title: 'Photizo Porch Divine Service Broadcast',
+  hideChat: false,
+  defaultVideoId: 'gYjT55c-k_A',
+  defaultVideoTitle: 'Hour of Divine Worship & Apostolic Glory'
+};
+
+export const DEFAULT_SECTIONS: PageSection[] = [
+  { 
+    sectionId: 'hero', 
+    title: "Redefining the destinies of men through His Glorious Light", 
+    subtitle: "An oasis of revelation led by Prophet Japhet Tsukwas and Mrs. Regina Japheth.",
+    content: "Through your giving, we are able to reach the world with the message of illumination and excellence. Your seed is a testimony of your faith.",
+    order: 0,
+    imageUrl: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=75&w=1280&auto=format&fit=crop"
+  },
+  {
+    sectionId: 'about',
+    title: 'Our Divine Mandate',
+    subtitle: 'Enlightening hearts with the knowledge of God\'s glory.',
+    content: "Photizo Porch Christian Assembly is more than a church; it is a portal of divine illumination. Our name, derived from the Greek 'Photizo,' signifies our sacred mandate to enlighten hearts and manifest kingdom excellence.\n\nUnder the leadership of Prophet Japeth Tsukwas, we are building a global community dedicated to supernatural manifestations and purposeful living.",
+    order: 1,
+    imageUrl: "/user_uploads/upload_6_Engrossed_in_worship.webp"
+  }
+];
+
+export const DEFAULT_CHURCH_EVENTS: ChurchEvent[] = [
+  {
+    id: "evt_1",
+    title: "Sunday Illumination Service",
+    category: "Sunday Service",
+    date: "2026-07-05",
+    time: "09:00 AM WAT",
+    location: "Main Sanctuary, Photizo Porch Christian Assembly",
+    description: "Atmosphere of divine praise, prophetic declarations, and deeper revelation in the word led by Prophet Japhet Tsukwas.",
+    imageUrl: "/user_uploads/upload_0_Hour_of_worship.webp"
+  },
+  {
+    id: "evt_2",
+    title: "Midweek Prophetic Communion Service",
+    category: "Communion Service",
+    date: "2026-07-08",
+    time: "05:00 PM WAT",
+    location: "Main Sanctuary & Online Broadcast",
+    description: "Partaking in the mystery of the communion table with healing, divine restoration, and prophetic impartation.",
+    imageUrl: "/user_uploads/upload_2_Prayers___.webp"
+  },
+  {
+    id: "evt_3",
+    title: "Night of Apostolic Glory & Wonders",
+    category: "Miracle & Healing",
+    date: "2026-07-17",
+    time: "10:00 PM WAT",
+    location: "Sanctuary Auditorium",
+    description: "An extraordinary night vigil of unhindered prayer, prophetic ministry, and supernatural manifestations.",
+    imageUrl: "/user_uploads/upload_3_Worship.webp"
+  }
+];
+
+export const DEFAULT_BLOG_POSTS: BlogPost[] = [
+  {
+    id: "post_1",
+    title: "Walking in the Illumination of the Spirit",
+    author: "Prophet Japhet Tsukwas",
+    date: "2026-07-01",
+    category: "Devotional",
+    summary: "Discover how spiritual understanding dispels darkness and anchors your steps in perpetual victory.",
+    content: "The entrance of Thy words giveth light; it giveth understanding unto the simple (Psalm 119:130).\n\nWhen light dawns upon your spirit, struggle terminates. Illumination is not merely intellectual comprehension; it is the spiritual reality where God's truth becomes your operating frequency. As sons and daughters of light, we are called to shine brighter and brighter unto the perfect day.",
+    imageUrl: "/user_uploads/upload_0_Hour_of_worship.webp"
+  },
+  {
+    id: "post_2",
+    title: "The Power of Prophetic Intercession",
+    author: "Prophet Japhet Tsukwas",
+    date: "2026-06-24",
+    category: "Prophetic Word",
+    summary: "Birthing destinies on the altar of fervent, Spirit-led prayer and apostolic decrees.",
+    content: "True prophetic prayer does not beg; it aligns heaven's decrees with earthly realities. When we intercede under the unction of the Holy Ghost, barriers crumble and gates of iron are broken in sunder.\n\nLearn to build a persistent altar where revelation translates into visible victories for your family, ministry, and generation.",
+    imageUrl: "/user_uploads/upload_2_Prayers___.webp"
+  },
+  {
+    id: "post_3",
+    title: "Manifesting Kingdom Excellence in Every Sphere",
+    author: "Mrs. Regina Japheth",
+    date: "2026-06-18",
+    category: "Teaching",
+    summary: "Cultivating honor, integrity, and divine excellence in your everyday calling and community impact.",
+    content: "Excellence is not an option for believers; it is our royal nature. When the Queen of Sheba observed the order and excellence in Solomon's court, there was no more spirit left in her.\n\nWhatever your hands find to do, execute it with supernatural skill and Christ-like grace that glorifies our Father.",
+    imageUrl: "/user_uploads/upload_9_Humanitarian_service.webp"
+  }
+];
+
+export const DEFAULT_SERMONS: Sermon[] = [
+  {
+    id: "sermon_1",
+    title: "Establishing Your Prophetic Season",
+    speaker: "Prophet Japhet Tsukwas",
+    date: "2026-06-28",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    category: "Prophetic Word",
+    description: "An atmospheric message detailing how to identify, align, and cooperatively run with the prophetic instructions of God for your current season.",
+    duration: "12:34"
+  },
+  {
+    id: "sermon_2",
+    title: "The Supernatural Dimension of Faith",
+    speaker: "Prophet Japhet Tsukwas",
+    date: "2026-06-21",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    category: "Teaching",
+    description: "Understanding the exact laws of divine faith, supernatural confessions, and stepping beyond intellectual limits to tap into the divine treasury.",
+    duration: "07:05"
+  },
+  {
+    id: "sermon_3",
+    title: "Walking in Divine Authority & Dominion",
+    speaker: "Prophet Japhet Tsukwas",
+    date: "2026-06-14",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    category: "Sunday Message",
+    description: "Exercising your spiritual rights in Christ Jesus and enforcing victory over every contrary circumstance.",
+    duration: "15:20"
+  }
+];
+
+// Local cache helper to ensure 0ms instantaneous initial render
+function getLocalCache<T>(key: string, fallback: T): T {
+  try {
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('photizo_' + key);
+      if (raw) return JSON.parse(raw);
+    }
+  } catch {}
+  return fallback;
+}
+
+function setLocalCache(key: string, data: any) {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('photizo_' + key, JSON.stringify(data));
+    }
+  } catch {}
+}
+
 export const firebaseService = {
   // Site Settings
   async getSiteSettings(): Promise<SiteSettings | null> {
@@ -262,18 +516,35 @@ export const firebaseService = {
   // Sections
   subscribeSections(callback: (sections: PageSection[]) => void) {
     const path = 'sections';
-    const q = query(collection(db, path), orderBy('order', 'asc'));
-    return onSnapshot(q, (snap) => {
-      const sections = snap.docs.map(d => ({ id: d.id, ...d.data() } as PageSection));
-      callback(sections);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, path);
-    });
+    callback(getLocalCache('sections', DEFAULT_SECTIONS));
+
+    try {
+      const q = query(collection(db, path), orderBy('order', 'asc'));
+      return onSnapshot(q, (snap) => {
+        if (!snap.empty) {
+          const sections = snap.docs.map(d => ({ id: d.id, ...d.data() } as PageSection));
+          setLocalCache('sections', sections);
+          callback(sections);
+        } else {
+          callback(DEFAULT_SECTIONS);
+        }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, path);
+      });
+    } catch {
+      return () => {};
+    }
   },
 
   async upsertSection(section: PageSection) {
     const path = `sections/${section.sectionId}`;
     try {
+      const current = getLocalCache('sections', DEFAULT_SECTIONS);
+      const updated = current.some(s => s.sectionId === section.sectionId)
+        ? current.map(s => s.sectionId === section.sectionId ? section : s)
+        : [...current, section];
+      setLocalCache('sections', updated);
+
       await setDoc(doc(db, 'sections', section.sectionId), section);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -283,6 +554,8 @@ export const firebaseService = {
   async deleteSection(sectionId: string) {
     const path = `sections/${sectionId}`;
     try {
+      const current = getLocalCache('sections', DEFAULT_SECTIONS);
+      setLocalCache('sections', current.filter(s => s.sectionId !== sectionId));
       await deleteDoc(doc(db, 'sections', sectionId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
@@ -343,16 +616,29 @@ export const firebaseService = {
   // Live Stream
   subscribeStream(callback: (stream: LiveStream | null) => void) {
     const path = 'settings/stream';
-    return onSnapshot(doc(db, path), (snap) => {
-      callback(snap.exists() ? snap.data() as LiveStream : null);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, path);
-    });
+    callback(getLocalCache('stream', DEFAULT_STREAM));
+
+    try {
+      return onSnapshot(doc(db, path), (snap) => {
+        if (snap.exists()) {
+          const data = snap.data() as LiveStream;
+          setLocalCache('stream', data);
+          callback(data);
+        } else {
+          callback(DEFAULT_STREAM);
+        }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.GET, path);
+      });
+    } catch {
+      return () => {};
+    }
   },
 
   async updateStream(stream: LiveStream) {
     const path = 'settings/stream';
     try {
+      setLocalCache('stream', stream);
       await setDoc(doc(db, path), stream);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -362,6 +648,10 @@ export const firebaseService = {
   async setLiveStatus(isLive: boolean) {
     const path = 'settings/stream';
     try {
+      const current = getLocalCache('stream', DEFAULT_STREAM);
+      const updated = { ...current, isLive };
+      setLocalCache('stream', updated);
+
       const snap = await getDoc(doc(db, path));
       if (snap.exists()) {
         const existing = snap.data() as LiveStream;
@@ -370,12 +660,7 @@ export const firebaseService = {
           isLive
         });
       } else {
-        await setDoc(doc(db, path), {
-          isLive,
-          streamId: '',
-          platform: 'youtube',
-          title: 'Photizo Porch Divine Service'
-        });
+        await setDoc(doc(db, path), updated);
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -416,13 +701,24 @@ export const firebaseService = {
   // Events
   subscribeEvents(callback: (events: ChurchEvent[]) => void) {
     const path = 'events';
-    const q = query(collection(db, path), orderBy('date', 'asc'));
-    return onSnapshot(q, (snap) => {
-      const events = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChurchEvent));
-      callback(events);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, path);
-    });
+    callback(getLocalCache('events', DEFAULT_CHURCH_EVENTS));
+
+    try {
+      const q = query(collection(db, path), orderBy('date', 'asc'));
+      return onSnapshot(q, (snap) => {
+        if (!snap.empty) {
+          const events = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChurchEvent));
+          setLocalCache('events', events);
+          callback(events);
+        } else {
+          callback(DEFAULT_CHURCH_EVENTS);
+        }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, path);
+      });
+    } catch {
+      return () => {};
+    }
   },
 
   async upsertEvent(event: ChurchEvent) {
@@ -430,6 +726,12 @@ export const firebaseService = {
     const path = `events/${eventId}`;
     const { id, ...data } = event;
     try {
+      const current = getLocalCache('events', DEFAULT_CHURCH_EVENTS);
+      const updated = current.some(e => e.id === eventId)
+        ? current.map(e => e.id === eventId ? event : e)
+        : [...current, { ...event, id: eventId }];
+      setLocalCache('events', updated);
+
       await setDoc(doc(db, 'events', eventId), data);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -439,6 +741,8 @@ export const firebaseService = {
   async deleteEvent(eventId: string) {
     const path = `events/${eventId}`;
     try {
+      const current = getLocalCache('events', DEFAULT_CHURCH_EVENTS);
+      setLocalCache('events', current.filter(e => e.id !== eventId));
       await deleteDoc(doc(db, 'events', eventId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
@@ -448,13 +752,24 @@ export const firebaseService = {
   // Sermons / Podcasts
   subscribeSermons(callback: (sermons: Sermon[]) => void) {
     const path = 'sermons';
-    const q = query(collection(db, path), orderBy('date', 'desc')); // Newer sermons first
-    return onSnapshot(q, (snap) => {
-      const sermons = snap.docs.map(d => ({ id: d.id, ...d.data() } as Sermon));
-      callback(sermons);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, path);
-    });
+    callback(getLocalCache('sermons', DEFAULT_SERMONS));
+
+    try {
+      const q = query(collection(db, path), orderBy('date', 'desc'));
+      return onSnapshot(q, (snap) => {
+        if (!snap.empty) {
+          const sermons = snap.docs.map(d => ({ id: d.id, ...d.data() } as Sermon));
+          setLocalCache('sermons', sermons);
+          callback(sermons);
+        } else {
+          callback(DEFAULT_SERMONS);
+        }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, path);
+      });
+    } catch {
+      return () => {};
+    }
   },
 
   async upsertSermon(sermon: Sermon) {
@@ -462,6 +777,12 @@ export const firebaseService = {
     const path = `sermons/${sermonId}`;
     const { id, ...data } = sermon;
     try {
+      const current = getLocalCache('sermons', DEFAULT_SERMONS);
+      const updated = current.some(s => s.id === sermonId)
+        ? current.map(s => s.id === sermonId ? sermon : s)
+        : [...current, { ...sermon, id: sermonId }];
+      setLocalCache('sermons', updated);
+
       await setDoc(doc(db, 'sermons', sermonId), data);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -471,6 +792,8 @@ export const firebaseService = {
   async deleteSermon(sermonId: string) {
     const path = `sermons/${sermonId}`;
     try {
+      const current = getLocalCache('sermons', DEFAULT_SERMONS);
+      setLocalCache('sermons', current.filter(s => s.id !== sermonId));
       await deleteDoc(doc(db, 'sermons', sermonId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
@@ -480,13 +803,24 @@ export const firebaseService = {
   // Excerpts & Gallery
   subscribeExcerpts(callback: (excerpts: Excerpt[]) => void) {
     const path = 'excerpts';
-    const q = query(collection(db, path));
-    return onSnapshot(q, (snap) => {
-      const excerpts = snap.docs.map(d => ({ id: d.id, ...d.data() } as Excerpt));
-      callback(excerpts);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, path);
-    });
+    callback(getLocalCache('excerpts', DEFAULT_AUTHENTIC_EXCERPTS));
+
+    try {
+      const q = query(collection(db, path));
+      return onSnapshot(q, (snap) => {
+        if (!snap.empty) {
+          const excerpts = snap.docs.map(d => ({ id: d.id, ...d.data() } as Excerpt));
+          setLocalCache('excerpts', excerpts);
+          callback(excerpts);
+        } else {
+          callback(DEFAULT_AUTHENTIC_EXCERPTS);
+        }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, path);
+      });
+    } catch {
+      return () => {};
+    }
   },
 
   async upsertExcerpt(excerpt: Excerpt) {
@@ -494,6 +828,12 @@ export const firebaseService = {
     const path = `excerpts/${excerptId}`;
     const { id, ...data } = excerpt;
     try {
+      const current = getLocalCache('excerpts', DEFAULT_AUTHENTIC_EXCERPTS);
+      const updated = current.some(e => e.id === excerptId)
+        ? current.map(e => e.id === excerptId ? excerpt : e)
+        : [{ ...excerpt, id: excerptId }, ...current];
+      setLocalCache('excerpts', updated);
+
       await setDoc(doc(db, 'excerpts', excerptId), data);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -503,6 +843,8 @@ export const firebaseService = {
   async deleteExcerpt(excerptId: string) {
     const path = `excerpts/${excerptId}`;
     try {
+      const current = getLocalCache('excerpts', DEFAULT_AUTHENTIC_EXCERPTS);
+      setLocalCache('excerpts', current.filter(e => e.id !== excerptId));
       await deleteDoc(doc(db, 'excerpts', excerptId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
@@ -512,13 +854,24 @@ export const firebaseService = {
   // Blog Posts
   subscribeBlogPosts(callback: (posts: BlogPost[]) => void) {
     const path = 'blogPosts';
-    const q = query(collection(db, path), orderBy('date', 'desc'));
-    return onSnapshot(q, (snap) => {
-      const posts = snap.docs.map(d => ({ id: d.id, ...d.data() } as BlogPost));
-      callback(posts);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, path);
-    });
+    callback(getLocalCache('blogPosts', DEFAULT_BLOG_POSTS));
+
+    try {
+      const q = query(collection(db, path), orderBy('date', 'desc'));
+      return onSnapshot(q, (snap) => {
+        if (!snap.empty) {
+          const posts = snap.docs.map(d => ({ id: d.id, ...d.data() } as BlogPost));
+          setLocalCache('blogPosts', posts);
+          callback(posts);
+        } else {
+          callback(DEFAULT_BLOG_POSTS);
+        }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, path);
+      });
+    } catch {
+      return () => {};
+    }
   },
 
   async upsertBlogPost(post: BlogPost) {
@@ -526,12 +879,17 @@ export const firebaseService = {
     const path = `blogPosts/${postId}`;
     const { id, ...data } = post;
     
-    // Filter out undefined properties to prevent Firestore setDoc failures
     const cleanData = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v !== undefined)
     );
 
     try {
+      const current = getLocalCache('blogPosts', DEFAULT_BLOG_POSTS);
+      const updated = current.some(p => p.id === postId)
+        ? current.map(p => p.id === postId ? post : p)
+        : [{ ...post, id: postId }, ...current];
+      setLocalCache('blogPosts', updated);
+
       await setDoc(doc(db, 'blogPosts', postId), cleanData);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -541,6 +899,8 @@ export const firebaseService = {
   async deleteBlogPost(postId: string) {
     const path = `blogPosts/${postId}`;
     try {
+      const current = getLocalCache('blogPosts', DEFAULT_BLOG_POSTS);
+      setLocalCache('blogPosts', current.filter(p => p.id !== postId));
       await deleteDoc(doc(db, 'blogPosts', postId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);

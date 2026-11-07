@@ -35,8 +35,9 @@ interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errMessage = error instanceof Error ? error.message : String(error);
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMessage,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -51,21 +52,19 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
+  
+  console.warn(`[Firestore ${operationType} on ${path || 'unknown'}]:`, errMessage);
 
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
-    }
+  // Throw on write operations so UI form handlers can catch and display errors
+  if (
+    operationType === OperationType.CREATE ||
+    operationType === OperationType.UPDATE ||
+    operationType === OperationType.DELETE ||
+    operationType === OperationType.WRITE
+  ) {
+    throw new Error(JSON.stringify(errInfo));
   }
 }
-
-testConnection();
 
 export const login = () => signInWithPopup(auth, googleProvider);
 export const logout = () => signOut(auth);

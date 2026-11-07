@@ -9,7 +9,7 @@ import AudioSermons from './components/AudioSermons';
 import LiveStreamHero from './components/LiveStreamHero';
 import { useAuth } from './lib/AuthContext';
 import { login, logout } from './lib/firebase';
-import { PageSection, firebaseService } from './lib/firebaseService';
+import { PageSection, firebaseService, DEFAULT_SECTIONS } from './lib/firebaseService';
 import EditableSection from './components/EditableSection';
 import ExcerptGallery from './components/ExcerptGallery';
 import Blog from './components/Blog';
@@ -178,7 +178,7 @@ export default function App() {
   // effectiveIsAdmin is true ONLY if user is authenticated admin AND edit mode is enabled
   const effectiveIsAdmin = actualIsAdmin && isEditMode;
 
-  const [sections, setSections] = useState<PageSection[]>([]);
+  const [sections, setSections] = useState<PageSection[]>(DEFAULT_SECTIONS);
   const [isStaffPortalOpen, setIsStaffPortalOpen] = useState(false);
 
   useEffect(() => {
@@ -268,7 +268,8 @@ export default function App() {
         }
       }
 
-      setSections(correctedData.filter(s => ['hero', 'about'].includes(s.sectionId)).sort((a, b) => (a.order || 0) - (b.order || 0)));
+      const targetData = correctedData.length > 0 ? correctedData : DEFAULT_SECTIONS;
+      setSections(targetData.filter(s => ['hero', 'about'].includes(s.sectionId)).sort((a, b) => (a.order || 0) - (b.order || 0)));
     });
 
     const unsubStream = firebaseService.subscribeStream((stream) => {
@@ -642,14 +643,19 @@ export default function App() {
                       {section.imageUrl ? (
                         <>
                           <img 
-                            src={section.imageUrl} 
+                            src={section.imageUrl || "/user_uploads/upload_6_Engrossed_in_worship.webp"} 
                             alt="Ministry" 
-                            loading="lazy"
                             decoding="async"
-                            onClick={() => setAboutLightboxUrl(section.imageUrl!)}
+                            onClick={() => setAboutLightboxUrl(section.imageUrl || "/user_uploads/upload_6_Engrossed_in_worship.webp")}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105 cursor-pointer"
                             title="Click to view original photo full screen"
                             referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              const src = e.currentTarget.src;
+                              if (src.endsWith('.webp')) {
+                                e.currentTarget.src = src.replace(/\.webp$/, '.jpeg');
+                              }
+                            }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none" />
                           
