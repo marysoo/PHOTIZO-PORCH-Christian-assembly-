@@ -50,6 +50,8 @@ export interface LiveStream {
   platform: 'youtube' | 'vimeo';
   title?: string;
   hideChat?: boolean;
+  defaultVideoId?: string; // YouTube video ID or link for existing replay when off-air
+  defaultVideoTitle?: string;
 }
 
 export interface LiveChatMessage {
