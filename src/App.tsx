@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube, Trash2, Camera, Upload, Info, Image as ImageIcon, Calendar, Headphones, BookOpen, HeartHandshake, Radio, ShieldCheck } from 'lucide-react';
+import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube, Trash2, Camera, Upload, Info, Image as ImageIcon, Calendar, Headphones, BookOpen, HeartHandshake, Radio, ShieldCheck, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { MINISTRY_NAME, LEADERS, CONTACT_INFO } from './constants';
 import GivingHub from './components/GivingHub';
@@ -10,6 +10,7 @@ import LiveStreamHero from './components/LiveStreamHero';
 import { useAuth } from './lib/AuthContext';
 import { login, logout } from './lib/firebase';
 import { PageSection, firebaseService, DEFAULT_SECTIONS } from './lib/firebaseService';
+import { optimizeImageFile } from './lib/imageOptimizer';
 import EditableSection from './components/EditableSection';
 import ExcerptGallery from './components/ExcerptGallery';
 import Blog from './components/Blog';
@@ -119,38 +120,44 @@ export default function App() {
     }
   };
 
-  const handleAboutImageUpload = (file: File, section: PageSection) => {
+  const [isUploadingAboutPhoto, setIsUploadingAboutPhoto] = useState(false);
+
+  const handleAboutImageUpload = async (file: File, section: PageSection) => {
     if (!file.type.startsWith('image/')) {
       alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      if (event.target?.result) {
-        try {
-          const rawDataUrl = event.target.result as string;
-          await firebaseService.upsertSection({
-            ...section,
-            imageUrl: rawDataUrl
-          });
-        } catch (e) {
-          alert('Failed to save image.');
-        }
-      }
-    };
-    reader.onerror = () => {
-      alert('Error reading image file.');
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingAboutPhoto(true);
+    try {
+      const optimizedDataUrl = await optimizeImageFile(file, 1600, 1600, 0.85);
+      await firebaseService.upsertSection({
+        ...section,
+        imageUrl: optimizedDataUrl
+      });
+      setAdminToast('About Us photo updated successfully!');
+      setTimeout(() => setAdminToast(null), 3000);
+    } catch (e) {
+      console.error('Failed to optimize and save photo:', e);
+      alert('Failed to save image. Please verify the image file.');
+    } finally {
+      setIsUploadingAboutPhoto(false);
+    }
   };
 
   const handleAboutImageDelete = async (section: PageSection) => {
     if (window.confirm('Are you sure you want to delete the image from the About section?')) {
-      await firebaseService.upsertSection({
-        ...section,
-        imageUrl: ''
-      });
+      try {
+        await firebaseService.upsertSection({
+          ...section,
+          imageUrl: 'none'
+        });
+        setAdminToast('Photo deleted from About section.');
+        setTimeout(() => setAdminToast(null), 3000);
+      } catch (e) {
+        console.error('Failed to delete image:', e);
+        alert('Failed to delete image.');
+      }
     }
   };
   
@@ -259,12 +266,6 @@ export default function App() {
         if (heroSec && (heroSec.title.toLowerCase().includes('illuminating') || heroSec.title === 'New Section')) {
           heroSec.title = "Redefining the destinies of men through His Glorious Light";
           firebaseService.upsertSection(heroSec);
-        }
-
-        const aboutSec = correctedData.find(s => s.sectionId === 'about');
-        if (aboutSec && (!aboutSec.imageUrl || aboutSec.imageUrl === '')) {
-          aboutSec.imageUrl = "/user_uploads/upload_6_Engrossed_in_worship.webp";
-          firebaseService.upsertSection(aboutSec);
         }
       }
 
@@ -641,13 +642,13 @@ export default function App() {
                         }
                       }}
                     >
-                      {section.imageUrl !== 'none' ? (
+                      {Boolean(section.imageUrl && section.imageUrl !== 'none' && section.imageUrl.trim() !== '') ? (
                         <>
                           <img 
-                            src={section.imageUrl || "/user_uploads/upload_6_Engrossed_in_worship.webp"} 
+                            src={section.imageUrl} 
                             alt="Prophet Japhet Tsukwas - Photizo Porch Christian Assembly" 
                             decoding="async"
-                            onClick={() => setAboutLightboxUrl(section.imageUrl || "/user_uploads/upload_6_Engrossed_in_worship.webp")}
+                            onClick={() => setAboutLightboxUrl(section.imageUrl!)}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105 cursor-pointer"
                             title="Click to view original photo full screen"
                             referrerPolicy="no-referrer"
@@ -674,7 +675,7 @@ export default function App() {
                           </div>
                         </>
                       ) : (
-                        /* Empty/Deleted State (Admin can restore or browse) */
+                        /* Empty/Deleted State (Admin can upload or restore) */
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-zinc-800 rounded-3xl">
                           <div className="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center mb-4 text-zinc-500">
                             <Upload className="w-8 h-8" />
@@ -682,19 +683,43 @@ export default function App() {
                           <h4 className="text-lg font-bold text-zinc-300 mb-1">About Image Removed</h4>
                           <p className="text-xs text-zinc-500 mb-5 max-w-xs">Upload a new photo or restore the original photo of Prophet Japhet Tsukwas.</p>
                           {effectiveIsAdmin && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                firebaseService.upsertSection({
-                                  ...section,
-                                  imageUrl: '/user_uploads/upload_6_Engrossed_in_worship.webp'
-                                });
-                              }}
-                              className="px-4 py-2 bg-gold text-zinc-950 font-bold text-xs rounded-full cursor-pointer shadow-lg hover:brightness-110 transition-all"
-                            >
-                              Restore Pastor's Photo
-                            </button>
+                            <div className="flex flex-wrap items-center justify-center gap-2">
+                              <label className="px-4 py-2 bg-gold hover:bg-amber-400 text-zinc-950 font-bold text-xs rounded-full cursor-pointer shadow-lg transition-all flex items-center gap-1.5">
+                                <Camera size={14} />
+                                <span>Upload New Photo</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    if (e.target.files?.[0]) {
+                                      handleAboutImageUpload(e.target.files[0], section);
+                                    }
+                                  }}
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  firebaseService.upsertSection({
+                                    ...section,
+                                    imageUrl: '/user_uploads/upload_6_Engrossed_in_worship.webp'
+                                  });
+                                }}
+                                className="px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-gold/50 text-gold font-bold text-xs rounded-full cursor-pointer shadow-lg transition-all"
+                              >
+                                Restore Pastor's Photo
+                              </button>
+                            </div>
                           )}
+                        </div>
+                      )}
+
+                      {/* Uploading progress overlay */}
+                      {isUploadingAboutPhoto && (
+                        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-30 flex flex-col items-center justify-center gap-3 text-gold">
+                          <Loader2 className="w-8 h-8 animate-spin" />
+                          <span className="text-xs font-semibold tracking-wider uppercase text-zinc-200">Optimizing & Saving Photo...</span>
                         </div>
                       )}
                     </div>
@@ -735,23 +760,20 @@ export default function App() {
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setAboutLightboxUrl(section.imageUrl || "/user_uploads/upload_6_Engrossed_in_worship.webp")}
-                            className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white rounded-xl cursor-pointer transition-all"
-                            title="View Fullscreen"
-                          >
-                            <ImageIcon className="w-3.5 h-3.5" />
-                          </button>
+                          {Boolean(section.imageUrl && section.imageUrl !== 'none') && (
+                            <button
+                              type="button"
+                              onClick={() => setAboutLightboxUrl(section.imageUrl!)}
+                              className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white rounded-xl cursor-pointer transition-all"
+                              title="View Fullscreen"
+                            >
+                              <ImageIcon className="w-3.5 h-3.5" />
+                            </button>
+                          )}
 
                           <button
                             type="button"
-                            onClick={() => {
-                              firebaseService.upsertSection({
-                                ...section,
-                                imageUrl: 'none'
-                              });
-                            }}
+                            onClick={() => handleAboutImageDelete(section)}
                             className="flex items-center gap-1 px-3 py-1.5 bg-red-950/70 hover:bg-red-900 text-red-200 border border-red-800/40 text-xs font-semibold rounded-xl cursor-pointer transition-all"
                             title="Delete / Hide photo from About section"
                           >

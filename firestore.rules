@@ -32,7 +32,9 @@ service cloud.firestore {
       return data.sectionId is string && data.sectionId.size() <= 100 &&
              data.title is string && data.title.size() <= 500 &&
              data.content is string && data.content.size() <= 10000 &&
-             data.order is number;
+             data.order is number &&
+             (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 500)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 4000000));
     }
 
     function isValidGivingSystem(data) {

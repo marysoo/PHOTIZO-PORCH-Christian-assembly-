@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Edit2, Save, X, UploadCloud, Trash2, Camera, Eye } from 'lucide-react';
+import { Edit2, Save, X, UploadCloud, Trash2, Camera, Eye, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PageSection, firebaseService } from '../lib/firebaseService';
+import { optimizeImageFile } from '../lib/imageOptimizer';
 
 interface EditableSectionProps {
   section: PageSection;
@@ -13,27 +14,30 @@ export default function EditableSection({ section, isAdmin, children }: Editable
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<PageSection>(section);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   const handleSave = async () => {
     await firebaseService.upsertSection(formData);
     setIsEditing(false);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (!file.type.startsWith('image/')) {
         alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          // Keep image in 100% original unenhanced state
-          setFormData(prev => ({ ...prev, imageUrl: event.target!.result as string }));
-        }
-      };
-      reader.readAsDataURL(file);
+      setIsOptimizing(true);
+      try {
+        const optimized = await optimizeImageFile(file, 1600, 1600, 0.85);
+        setFormData(prev => ({ ...prev, imageUrl: optimized }));
+      } catch (err) {
+        console.error('Failed to optimize image:', err);
+        alert('Failed to process image. Please try a different image.');
+      } finally {
+        setIsOptimizing(false);
+      }
     }
   };
 
@@ -110,7 +114,7 @@ export default function EditableSection({ section, isAdmin, children }: Editable
                 <div className="space-y-2 pt-2 border-t border-zinc-800">
                   <label className="text-xs text-zinc-500 uppercase tracking-widest block font-semibold">Section Image</label>
                   
-                  {formData.imageUrl ? (
+                  {Boolean(formData.imageUrl && formData.imageUrl !== 'none' && formData.imageUrl.trim() !== '') ? (
                     <div className="relative rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 group/img">
                       <img 
                         src={formData.imageUrl} 
@@ -130,7 +134,7 @@ export default function EditableSection({ section, isAdmin, children }: Editable
                         </button>
                         <button
                           type="button"
-                          onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                          onClick={() => setFormData({ ...formData, imageUrl: 'none' })}
                           className="px-3 py-1.5 bg-red-950 border border-red-800 text-red-300 text-xs rounded-full flex items-center gap-1 hover:bg-red-900 cursor-pointer"
                         >
                           <Trash2 size={14} /> Delete Image
@@ -139,23 +143,32 @@ export default function EditableSection({ section, isAdmin, children }: Editable
                     </div>
                   ) : (
                     <div className="border-2 border-dashed border-zinc-800 hover:border-gold/50 rounded-2xl p-4 text-center transition-colors">
-                      <UploadCloud className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-                      <p className="text-xs text-zinc-400 font-medium mb-2">Upload image file or enter URL below</p>
-                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-gold border border-gold/30 rounded-xl text-xs font-bold cursor-pointer transition-all">
-                        <Camera size={14} /> Upload Image File
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFileChange}
-                        />
-                      </label>
+                      {isOptimizing ? (
+                        <div className="py-6 flex flex-col items-center justify-center gap-2 text-gold">
+                          <Loader2 className="w-8 h-8 animate-spin" />
+                          <span className="text-xs text-zinc-300">Optimizing & preparing image...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <UploadCloud className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+                          <p className="text-xs text-zinc-400 font-medium mb-2">Upload image file or enter URL below</p>
+                          <label className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-gold border border-gold/30 rounded-xl text-xs font-bold cursor-pointer transition-all">
+                            <Camera size={14} /> Upload Image File
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleFileChange}
+                            />
+                          </label>
+                        </>
+                      )}
                     </div>
                   )}
 
                   <input 
                     type="text" 
-                    value={formData.imageUrl || ''}
+                    value={formData.imageUrl === 'none' ? '' : (formData.imageUrl || '')}
                     placeholder="Or paste image URL (https://...)"
                     onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-zinc-100 focus:border-gold outline-none mt-2"
