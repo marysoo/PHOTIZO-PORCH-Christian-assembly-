@@ -23,10 +23,14 @@ import { firebaseService, LiveStream } from '../lib/firebaseService';
 import { CONTACT_INFO } from '../constants';
 import LiveStreamChat from './LiveStreamChat';
 
-// Helper function to extract video or playlist ID from various YouTube and Vimeo URL formats
-export function extractMediaId(input: string, platform: 'youtube' | 'vimeo' = 'youtube'): string {
+// Helper function to extract video or playlist ID from various YouTube, Facebook, and Vimeo URL formats
+export function extractMediaId(input: string, platform: 'youtube' | 'facebook' | 'vimeo' = 'youtube'): string {
   const trimmed = input.trim();
   if (!trimmed) return '';
+
+  if (platform === 'facebook') {
+    return trimmed;
+  }
 
   if (platform === 'youtube') {
     // 1. Direct 11-char ID (e.g. dQw4w9WgXcQ)
@@ -57,30 +61,25 @@ export function extractMediaId(input: string, platform: 'youtube' | 'vimeo' = 'y
     const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
     if (shortsMatch && shortsMatch[1]) return shortsMatch[1];
 
-    // 8. If channel handle or full URL was pasted with no specific video, return empty
-    if (trimmed.includes('@') || trimmed.includes('channel') || trimmed.includes('youtube.com')) {
-      return '';
-    }
-
     // Direct token if safe (between 8 and 34 alphanumeric chars)
     if (/^[a-zA-Z0-9_-]{8,34}$/.test(trimmed)) {
       return trimmed;
     }
 
-    return '';
+    return trimmed;
   } else {
     // Vimeo ID extraction
     const vimeoMatch = trimmed.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)/);
     if (vimeoMatch && vimeoMatch[3]) return vimeoMatch[3];
     if (/^\d+$/.test(trimmed)) return trimmed;
-    return '';
+    return trimmed;
   }
 }
 
 // Build clean, mobile-safe, privacy-enhanced embed URL
 export function buildEmbedUrl(
   mediaId: string, 
-  platform: 'youtube' | 'vimeo' = 'youtube', 
+  platform: 'youtube' | 'facebook' | 'vimeo' = 'youtube', 
   options: { autoplay?: boolean } = {}
 ): string {
   const cleanId = mediaId?.trim();
@@ -88,6 +87,11 @@ export function buildEmbedUrl(
 
   const { autoplay = true } = options;
   const autoPlayVal = autoplay ? '1' : '0';
+
+  if (platform === 'facebook') {
+    const fbHref = cleanId.startsWith('http') ? cleanId : `https://www.facebook.com/watch/?v=${cleanId}`;
+    return `https://www.facebook.com/plugins/video.php?height=476&href=${encodeURIComponent(fbHref)}&show_text=false&width=476&autoplay=${autoPlayVal}&mute=0`;
+  }
 
   if (platform === 'vimeo') {
     return `https://player.vimeo.com/video/${cleanId}?autoplay=${autoPlayVal}&playsinline=1`;
@@ -127,15 +131,20 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
     });
   };
 
+  // Dual Stream Switcher tab state (defaults to YouTube, switches to Facebook if stream platform is Facebook)
+  const [activeViewPlatform, setActiveViewPlatform] = useState<'youtube' | 'facebook'>('youtube');
+
   // Form state for Admin Broadcast Control
   const [editForm, setEditForm] = useState<LiveStream>({
     isLive: false,
     streamId: '',
     platform: 'youtube',
     title: 'Photizo Porch Divine Service',
-    hideChat: false
+    hideChat: false,
+    facebookUrl: CONTACT_INFO.facebook
   });
   const [rawLiveUrl, setRawLiveUrl] = useState('');
+  const [rawFacebookUrl, setRawFacebookUrl] = useState('');
 
   // Subscribe to live stream Firestore document
   useEffect(() => {
@@ -144,6 +153,10 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
       if (data) {
         setEditForm(data);
         setRawLiveUrl(data.streamId || '');
+        setRawFacebookUrl(data.facebookUrl || '');
+        if (data.platform === 'facebook') {
+          setActiveViewPlatform('facebook');
+        }
       }
     });
     return () => unsub();
@@ -180,11 +193,14 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
   };
 
   const handleSave = async () => {
-    const finalStreamId = extractMediaId(rawLiveUrl || editForm.streamId, editForm.platform);
+    const finalStreamId = editForm.platform === 'facebook'
+      ? (rawLiveUrl || editForm.streamId)
+      : extractMediaId(rawLiveUrl || editForm.streamId, editForm.platform);
     
     const updated: LiveStream = {
       ...editForm,
       streamId: finalStreamId,
+      facebookUrl: rawFacebookUrl.trim() || editForm.facebookUrl || (editForm.platform === 'facebook' ? finalStreamId : CONTACT_INFO.facebook),
       title: editForm.title || "Photizo Porch Divine Service"
     };
     await firebaseService.updateStream(updated);
@@ -221,13 +237,20 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
   };
 
   const isChatVisible = isChatOpen && !stream?.hideChat;
-  const currentVideoId = stream?.streamId || '';
-  const currentPlatform = stream?.platform || 'youtube';
+
+  // Safe playback: existing YouTube video loads and plays without blank screen
+  const youtubeVideoId = (stream?.platform === 'youtube' && stream?.streamId)
+    ? stream.streamId
+    : (stream?.defaultVideoId || 'gYjT55c-k_A');
+
+  const facebookVideoUrl = stream?.facebookUrl || (stream?.platform === 'facebook' ? stream?.streamId : '') || CONTACT_INFO.facebook;
+
+  const currentPlatform = activeViewPlatform;
+  const currentVideoId = currentPlatform === 'youtube' ? youtubeVideoId : facebookVideoUrl;
   const embedUrl = buildEmbedUrl(currentVideoId, currentPlatform, { autoplay: Boolean(stream?.isLive) });
   const activeTitle = stream?.title || "Photizo Porch Divine Service";
-  const youtubeWatchUrl = currentPlatform === 'youtube' && currentVideoId
-    ? `https://www.youtube.com/watch?v=${currentVideoId}`
-    : CONTACT_INFO.youtube;
+  const youtubeWatchUrl = youtubeVideoId ? `https://www.youtube.com/watch?v=${youtubeVideoId}` : CONTACT_INFO.youtube;
+  const facebookWatchUrl = facebookVideoUrl || CONTACT_INFO.facebook;
 
   return (
     <section id="live" className="relative px-3.5 sm:px-6 py-8 sm:py-14 md:py-20 bg-zinc-950 overflow-hidden border-b border-zinc-900 scroll-mt-20">
@@ -372,44 +395,90 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
           {/* Left Column: Responsive 16:9 Video Screen & Controls */}
           <div className={isChatVisible && !theaterMode ? 'lg:col-span-2' : 'w-full'}>
             
+            {/* Dual Stream Switcher Tabs: YouTube Broadcast / Facebook Live */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3.5">
+              <div className="flex items-center gap-1.5 p-1 bg-zinc-900/95 rounded-2xl border border-zinc-800 shadow-md">
+                <button
+                  type="button"
+                  onClick={() => setActiveViewPlatform('youtube')}
+                  className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeViewPlatform === 'youtube'
+                      ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-850'
+                  }`}
+                >
+                  <Youtube size={15} className={activeViewPlatform === 'youtube' ? 'text-white' : 'text-red-500'} />
+                  <span>YouTube Broadcast</span>
+                  {stream?.platform === 'youtube' && stream?.isLive && (
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveViewPlatform('facebook')}
+                  className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeViewPlatform === 'facebook'
+                      ? 'bg-[#1877F2] text-white shadow-[0_0_15px_rgba(24,119,242,0.4)]'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-850'
+                  }`}
+                >
+                  <Facebook size={15} className={activeViewPlatform === 'facebook' ? 'text-white' : 'text-[#1877F2]'} />
+                  <span>Facebook Live</span>
+                  {stream?.platform === 'facebook' && stream?.isLive && (
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-zinc-400">
+                <span className={`w-2 h-2 rounded-full ${stream?.isLive ? 'bg-red-500 animate-ping' : 'bg-emerald-500'}`} />
+                <span className="font-medium text-[11px] sm:text-xs">
+                  {stream?.isLive 
+                    ? `LIVE NOW: ${activeViewPlatform === 'youtube' ? 'YouTube Stream' : 'Facebook Broadcast'}`
+                    : (activeViewPlatform === 'youtube' ? 'Sermon Replay & Divine Service' : 'Facebook Ministry Altar')}
+                </span>
+              </div>
+            </div>
+
             {/* --- ADAPTIVE 16:9 VIDEO FRAME CONTAINER --- */}
             <div 
               ref={playerContainerRef}
               className="relative w-full aspect-video rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border border-zinc-800 bg-black shadow-[0_0_60px_-15px_var(--theme-glow-soft,rgba(212,175,55,0.2))] group"
             >
-              {currentVideoId ? (
-                <div className="w-full h-full relative">
-                  <iframe 
-                    className="w-full h-full border-0"
-                    src={embedUrl}
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    title={activeTitle}
-                  />
+              <div className="w-full h-full relative">
+                <iframe 
+                  className="w-full h-full border-0"
+                  src={embedUrl}
+                  loading="eager"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  title={activeTitle}
+                />
 
-                  {/* Top overlay indicators */}
-                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex items-center gap-2 pointer-events-none">
-                    {stream?.isLive ? (
-                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/90 text-white font-extrabold text-[10px] sm:text-xs tracking-wider uppercase backdrop-blur-md shadow-lg animate-pulse">
-                        <span className="w-2 h-2 rounded-full bg-white" />
-                        LIVE ON AIR
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-700 text-gold font-bold text-[10px] sm:text-xs tracking-wider uppercase backdrop-blur-md shadow-lg">
-                        <span>Sanctuary Broadcast</span>
-                      </span>
-                    )}
-                  </div>
+                {/* Top overlay indicators */}
+                <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex items-center gap-2 pointer-events-none">
+                  {stream?.isLive ? (
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/90 text-white font-extrabold text-[10px] sm:text-xs tracking-wider uppercase backdrop-blur-md shadow-lg animate-pulse">
+                      <span className="w-2 h-2 rounded-full bg-white" />
+                      LIVE ON AIR ({activeViewPlatform.toUpperCase()})
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-700 text-gold font-bold text-[10px] sm:text-xs tracking-wider uppercase backdrop-blur-md shadow-lg">
+                      <span>{activeViewPlatform === 'youtube' ? 'Sanctuary Worship & Sermon' : 'Facebook Ministry Broadcast'}</span>
+                    </span>
+                  )}
+                </div>
 
-                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-2">
-                    <button
-                      onClick={handleToggleFullscreen}
-                      className="p-2 rounded-full bg-black/75 hover:bg-black backdrop-blur-md border border-white/20 text-white hover:text-gold transition-colors cursor-pointer shadow-lg"
-                      title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-                    >
-                      {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                    </button>
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-2">
+                  <button
+                    onClick={handleToggleFullscreen}
+                    className="p-2 rounded-full bg-black/75 hover:bg-black backdrop-blur-md border border-white/20 text-white hover:text-gold transition-colors cursor-pointer shadow-lg"
+                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                  >
+                    {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                  </button>
+                  {activeViewPlatform === 'youtube' ? (
                     <a
                       href={youtubeWatchUrl}
                       target="_blank"
@@ -420,112 +489,63 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                       <span className="hidden sm:inline">Open YouTube</span>
                       <ExternalLink size={12} />
                     </a>
-                  </div>
-                </div>
-              ) : (
-                /* Off-air Sanctuary Hub (when no streamId is configured) */
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 sm:p-10 bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
-                  <div className="relative mb-5">
-                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-xl">
-                      <Youtube className="w-8 h-8 sm:w-9 sm:h-9 text-red-500" />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center text-gold">
-                      <Play size={12} className="fill-gold" />
-                    </div>
-                  </div>
-
-                  <span className="text-xs font-bold text-gold uppercase tracking-[0.2em] mb-1.5">
-                    Photizo Porch Live Altar
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-serif mb-2.5 text-white">
-                    Join Us Live for Divine Revelations
-                  </h3>
-                  <p className="text-zinc-400 max-w-lg mx-auto mb-5 text-xs sm:text-sm font-light leading-relaxed">
-                    Connect to our live prophetic encounters, prayer streams, and apostolic messages. When a service is on air, it streams right here with real-time fellowship chat.
-                  </p>
-
-                  {/* Service Schedule Pills */}
-                  <div className="flex flex-wrap items-center justify-center gap-2 mb-6 text-xs text-zinc-300">
-                    <div className="px-3 py-1 rounded-full bg-zinc-950 border border-zinc-800/80">
-                      <span className="text-gold font-bold">Sunday Service:</span> 9:00 AM WAT
-                    </div>
-                    <div className="px-3 py-1 rounded-full bg-zinc-950 border border-zinc-800/80">
-                      <span className="text-gold font-bold">Midweek Communion:</span> Wed 5:00 PM WAT
-                    </div>
-                    <div className="px-3 py-1 rounded-full bg-zinc-950 border border-zinc-800/80">
-                      <span className="text-gold font-bold">Prophetic Watch:</span> Fri 10:00 PM WAT
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap items-center justify-center gap-2.5">
-                    <a 
-                      href={CONTACT_INFO.youtube}
-                      target="_blank" 
+                  ) : (
+                    <a
+                      href={facebookWatchUrl}
+                      target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-red-600/30 transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 hover:bg-black backdrop-blur-md border border-white/20 text-white text-xs font-semibold hover:border-blue-500 transition-all shadow-xl"
                     >
-                      <Youtube size={15} />
-                      <span>Prophet Japhet's Channel</span>
+                      <Facebook size={14} className="text-[#1877F2]" />
+                      <span className="hidden sm:inline">Open Facebook</span>
                       <ExternalLink size={12} />
                     </a>
-
-                    <a 
-                      href={CONTACT_INFO.facebook}
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-blue-500/60 text-zinc-200 hover:text-white font-semibold text-xs transition-all"
-                    >
-                      <Facebook size={14} className="text-blue-500" />
-                      <span>Facebook Live</span>
-                    </a>
-
-                    {isAdmin && (
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gold hover:brightness-110 text-zinc-950 font-bold text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
-                      >
-                        <Settings size={14} />
-                        <span>Connect Stream</span>
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* --- CURRENT PLAYING TITLE & DETAILS CARD --- */}
-            {currentVideoId && (
-              <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-gold/10 text-gold border border-gold/20">
-                      {stream?.isLive ? 'Live Stream' : 'Sanctuary Broadcast'}
-                    </span>
-                    <span className="text-xs text-zinc-400 font-medium">
-                      &bull; Prophet Japhet Tsukwas & Ministry Altar
-                    </span>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-bold text-white truncate">
-                    {activeTitle}
-                  </h3>
+            <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-gold/10 text-gold border border-gold/20">
+                    {stream?.isLive ? 'Live Stream' : 'Sanctuary Broadcast'}
+                  </span>
+                  <span className="text-xs text-zinc-400 font-medium">
+                    &bull; Prophet Japhet Tsukwas & Ministry Altar
+                  </span>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-                  <a
-                    href={youtubeWatchUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors"
-                  >
-                    <Youtube size={14} className="text-red-500" />
-                    <span>Watch on YouTube</span>
-                    <ExternalLink size={12} />
-                  </a>
-                </div>
+                <h3 className="text-base sm:text-lg font-bold text-white truncate">
+                  {activeTitle}
+                </h3>
               </div>
-            )}
+
+              {/* Action Buttons: Both YouTube and Facebook */}
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                <a
+                  href={youtubeWatchUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors"
+                >
+                  <Youtube size={14} className="text-red-500" />
+                  <span>YouTube</span>
+                  <ExternalLink size={12} />
+                </a>
+
+                <a
+                  href={facebookWatchUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors"
+                >
+                  <Facebook size={14} className="text-[#1877F2]" />
+                  <span>Facebook</span>
+                  <ExternalLink size={12} />
+                </a>
+              </div>
+            </div>
 
             {/* When Chat is Hidden: Notice banner */}
             {!isChatVisible && (
@@ -693,36 +713,54 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                 </div>
 
                 {/* Platform and Stream Link */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs text-zinc-400 font-semibold uppercase tracking-wider block mb-1.5">
-                      Platform
-                    </label>
-                    <select 
-                      value={editForm.platform}
-                      onChange={e => setEditForm({ ...editForm, platform: e.target.value as any })}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm text-white focus:border-gold outline-none"
-                    >
-                      <option value="youtube">YouTube</option>
-                      <option value="vimeo">Vimeo</option>
-                    </select>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs text-zinc-400 font-semibold uppercase tracking-wider block mb-1.5">
+                        Default Platform
+                      </label>
+                      <select 
+                        value={editForm.platform}
+                        onChange={e => setEditForm({ ...editForm, platform: e.target.value as any })}
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm text-white focus:border-gold outline-none"
+                      >
+                        <option value="youtube">YouTube Broadcast</option>
+                        <option value="facebook">Facebook Live</option>
+                        <option value="vimeo">Vimeo</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="text-xs text-zinc-400 font-semibold uppercase tracking-wider block mb-1.5 flex items-center justify-between">
+                        <span>YouTube Live Link or Video ID</span>
+                        {editForm.streamId && (
+                          <span className="text-[10px] text-green-400 font-mono">
+                            ID: {editForm.streamId}
+                          </span>
+                        )}
+                      </label>
+                      <input 
+                        type="text" 
+                        value={rawLiveUrl}
+                        onChange={e => handleLiveUrlChange(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm text-white focus:border-gold outline-none font-mono placeholder:text-zinc-600"
+                        placeholder="Paste link: https://youtube.com/live/... or video ID (e.g. gYjT55c-k_A)"
+                      />
+                    </div>
                   </div>
 
-                  <div className="sm:col-span-2">
+                  {/* Facebook Live URL */}
+                  <div>
                     <label className="text-xs text-zinc-400 font-semibold uppercase tracking-wider block mb-1.5 flex items-center justify-between">
-                      <span>YouTube Live Link or Video ID</span>
-                      {editForm.streamId && (
-                        <span className="text-[10px] text-green-400 font-mono">
-                          ID: {editForm.streamId}
-                        </span>
-                      )}
+                      <span>Facebook Live / Video URL</span>
+                      <span className="text-[10px] text-blue-400">Facebook Embed Ready</span>
                     </label>
                     <input 
                       type="text" 
-                      value={rawLiveUrl}
-                      onChange={e => handleLiveUrlChange(e.target.value)}
+                      value={rawFacebookUrl}
+                      onChange={e => setRawFacebookUrl(e.target.value)}
                       className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm text-white focus:border-gold outline-none font-mono placeholder:text-zinc-600"
-                      placeholder="Paste link: https://youtube.com/live/... or video ID"
+                      placeholder="Paste Facebook Live/Video link (e.g. https://www.facebook.com/...)"
                     />
                   </div>
                 </div>
@@ -737,7 +775,17 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                     className="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:text-gold hover:border-gold/50 cursor-pointer flex items-center gap-1.5"
                   >
                     <Youtube size={13} className="text-red-500" />
-                    <span>Open YouTube Channel</span>
+                    <span>Prophet's YouTube</span>
+                    <ExternalLink size={10} />
+                  </a>
+                  <a
+                    href={CONTACT_INFO.facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:text-blue-400 hover:border-blue-500/50 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Facebook size={13} className="text-blue-500" />
+                    <span>Church Facebook</span>
                     <ExternalLink size={10} />
                   </a>
                 </div>

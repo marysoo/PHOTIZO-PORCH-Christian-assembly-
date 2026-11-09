@@ -46,9 +46,10 @@ service cloud.firestore {
     }
 
     function isValidStream(data) {
-      return data.streamId is string && data.platform in ['youtube', 'vimeo'] && data.isLive is bool &&
+      return data.streamId is string && data.platform in ['youtube', 'facebook', 'vimeo'] && data.isLive is bool &&
              (!('title' in data) || (data.title is string && data.title.size() <= 200)) &&
              (!('hideChat' in data) || data.hideChat is bool) &&
+             (!('facebookUrl' in data) || (data.facebookUrl is string && data.facebookUrl.size() <= 500)) &&
              (!('defaultVideoId' in data) || (data.defaultVideoId is string && data.defaultVideoId.size() <= 200)) &&
              (!('defaultVideoTitle' in data) || (data.defaultVideoTitle is string && data.defaultVideoTitle.size() <= 200));
     }
@@ -105,6 +106,9 @@ service cloud.firestore {
       return data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 100 &&
              data.message is string && data.message.size() >= 1 && data.message.size() <= 1000 &&
              data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('senderId' in data) || (data.senderId is string && data.senderId.size() <= 128)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50)) &&
+             (!('isEdited' in data) || data.isEdited is bool) &&
              (!('role' in data) || (data.role is string && data.role in ['member', 'pastor', 'admin']));
     }
 
@@ -169,7 +173,8 @@ service cloud.firestore {
     match /liveChatMessages/{messageId} {
       allow read: if true;
       allow create: if isValidId(messageId) && isValidLiveChatMessage(request.resource.data);
-      allow delete: if isAdmin();
+      allow update: if isValidId(messageId) && isValidLiveChatMessage(request.resource.data);
+      allow delete: if isAdmin() || isValidId(messageId);
     }
 
     match /admins/{userId} {

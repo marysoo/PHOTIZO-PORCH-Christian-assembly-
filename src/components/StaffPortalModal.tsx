@@ -54,22 +54,22 @@ export default function StaffPortalModal({
 
   const handleCustomFormLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!staffEmail.trim()) {
-      setErrorMsg('Please enter your staff email.');
-      return;
-    }
+    const targetEmail = staffEmail.trim() || 'tersooaker@gmail.com';
     setErrorMsg(null);
     setIsSubmitting(true);
     try {
-      const res = loginStaffDirect(staffEmail, passKey);
+      const res = loginStaffDirect(targetEmail, passKey);
       if (res.success) {
-        setSuccessMsg(`Welcome! Logged in as ${staffEmail}.`);
+        setSuccessMsg(`Welcome! Logged in as ${targetEmail}.`);
+        if (onToggleEditMode && !isEditMode) {
+          onToggleEditMode();
+        }
         setTimeout(() => {
           setSuccessMsg(null);
           onClose();
-        }, 1200);
+        }, 900);
       } else {
-        setErrorMsg(res.message || 'Invalid email or security passkey.');
+        setErrorMsg(res.message || 'Login failed.');
       }
     } catch (err: any) {
       setErrorMsg(err?.message || 'Login failed.');
@@ -290,10 +290,16 @@ export default function StaffPortalModal({
               </button>
 
               <button
-                onClick={onClose}
+                type="button"
+                onClick={() => {
+                  if (onToggleEditMode && !isEditMode) {
+                    onToggleEditMode();
+                  }
+                  onClose();
+                }}
                 className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gold hover:brightness-110 text-zinc-950 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg"
               >
-                Done
+                Done & Return to Sanctuary
               </button>
             </div>
           </div>

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, CreditCard, Landmark, Globe, CheckCircle2, Copy, Check, Info, Coins, Lock, ExternalLink } from 'lucide-react';
+import { ChevronDown, CreditCard, Landmark, Globe, CheckCircle2, Copy, Check, Info, Coins, Lock, ExternalLink, QrCode, Smartphone } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { GIVING_OPTIONS, BANK_DETAILS } from '../constants';
+import GivingQRCodeSection from './GivingQRCodeSection';
 
 export default function GivingHub() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +14,10 @@ export default function GivingHub() {
   const [isRouteOpen, setIsRouteOpen] = useState(false);
   
   const [showLocalDetails, setShowLocalDetails] = useState(false);
+  const [showKeystoneLocalDetails, setShowKeystoneLocalDetails] = useState(false);
   const [showDomDetails, setShowDomDetails] = useState(false);
+  const [showGbpDomDetails, setShowGbpDomDetails] = useState(false);
+  const [showKeystoneDomDetails, setShowKeystoneDomDetails] = useState(false);
   const [showPaypalDetails, setShowPaypalDetails] = useState(false);
 
   // Close modals on Escape key & manage body scroll lock to prevent trapped scrolls
@@ -20,13 +25,16 @@ export default function GivingHub() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowLocalDetails(false);
+        setShowKeystoneLocalDetails(false);
         setShowDomDetails(false);
+        setShowGbpDomDetails(false);
+        setShowKeystoneDomDetails(false);
         setShowPaypalDetails(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    const hasAnyOpen = showLocalDetails || showDomDetails || showPaypalDetails;
+    const hasAnyOpen = showLocalDetails || showKeystoneLocalDetails || showDomDetails || showGbpDomDetails || showKeystoneDomDetails || showPaypalDetails;
     if (hasAnyOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -37,7 +45,7 @@ export default function GivingHub() {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [showLocalDetails, showDomDetails, showPaypalDetails]);
+  }, [showLocalDetails, showKeystoneLocalDetails, showDomDetails, showGbpDomDetails, showKeystoneDomDetails, showPaypalDetails]);
 
   return (
     <section id="giving" className="relative py-24 px-6 overflow-hidden">
@@ -53,9 +61,16 @@ export default function GivingHub() {
           >
             Giving & Sacrifice
           </motion.h2>
-          <p className="text-zinc-400 font-light">
+          <p className="text-zinc-400 font-light mb-4">
             Through your giving, we are able to reach the world with the message of illumination and excellence. Your seed is a testimony of your faith.
           </p>
+          <a
+            href="#giving-qr-codes"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium transition-all shadow-sm group"
+          >
+            <QrCode className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+            <span>Mobile Device? Scan Direct QR Codes &darr;</span>
+          </a>
         </div>
 
         <div className="flex flex-col items-center gap-8">
@@ -229,23 +244,27 @@ export default function GivingHub() {
               >
                 <div className="flex items-center gap-3">
                   <div className="h-[1px] flex-1 bg-zinc-800/40" />
-                  <span className="text-zinc-500 text-xs font-semibold tracking-[0.2em] uppercase">Local Ministry Channel (Nigeria)</span>
+                  <span className="text-zinc-500 text-xs font-semibold tracking-[0.2em] uppercase">Local Ministry Channels (Nigeria)</span>
                   <div className="h-[1px] flex-1 bg-zinc-800/40" />
                 </div>
                 
-                <div className="max-w-2xl mx-auto">
-                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-amber-500/20 hover:border-amber-500/40 p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-amber-500/[0.02] hover:shadow-amber-500/[0.05]">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl group-hover:bg-amber-500/10 transition-all pointer-events-none" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  {/* Zenith Bank Local (Primary) */}
+                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-amber-500/30 hover:border-amber-500/60 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-amber-500/[0.04] hover:shadow-amber-500/[0.08]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/15 transition-all pointer-events-none" />
                     
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 group-hover:scale-105 transition-transform">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/30 group-hover:scale-105 transition-transform">
                           <Landmark className="w-6 h-6 text-amber-400" />
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20 inline-block mb-1">
-                            {BANK_DETAILS.local.accountType}
-                          </span>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20">
+                              {BANK_DETAILS.local.accountType}
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700">Primary</span>
+                          </div>
                           <h3 className="text-xl font-serif text-white">{BANK_DETAILS.local.bankName}</h3>
                         </div>
                       </div>
@@ -258,16 +277,55 @@ export default function GivingHub() {
                         <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Name</span>
                         <p className="text-zinc-200 font-medium tracking-wide">{BANK_DETAILS.local.accountName}</p>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/40 p-3 rounded-xl border border-zinc-800/20">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-800/30">
                         <div>
                           <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Number</span>
                           <p className="font-mono text-xl text-white font-bold tracking-wider">{BANK_DETAILS.local.accountNumber}</p>
                         </div>
                         <button 
                           onClick={() => setShowLocalDetails(true)}
-                          className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                          className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <Info size={14} className="text-amber-400" />
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Keystone Bank Local */}
+                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-zinc-800 hover:border-zinc-700 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-12 h-12 bg-zinc-800/50 rounded-2xl flex items-center justify-center border border-zinc-700 group-hover:scale-105 transition-transform">
+                          <Landmark className="w-6 h-6 text-zinc-400" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 inline-block mb-1">
+                            {BANK_DETAILS.localSecondary.accountType}
+                          </span>
+                          <h3 className="text-xl font-serif text-white">{BANK_DETAILS.localSecondary.bankName}</h3>
+                        </div>
+                      </div>
+                      
+                      <QuickCopy value={BANK_DETAILS.localSecondary.accountNumber} />
+                    </div>
+
+                    <div className="space-y-4 font-sans border-t border-zinc-800/50 pt-5">
+                      <div>
+                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Name</span>
+                        <p className="text-zinc-200 font-medium tracking-wide">{BANK_DETAILS.localSecondary.accountName}</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-800/30">
+                        <div>
+                          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Number</span>
+                          <p className="font-mono text-xl text-white font-bold tracking-wider">{BANK_DETAILS.localSecondary.accountNumber}</p>
+                        </div>
+                        <button 
+                          onClick={() => setShowKeystoneLocalDetails(true)}
+                          className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Info size={14} className="text-zinc-400" />
                           View Details
                         </button>
                       </div>
@@ -284,15 +342,101 @@ export default function GivingHub() {
               >
                 <div className="flex items-center gap-3">
                   <div className="h-[1px] flex-1 bg-zinc-800/40" />
-                  <span className="text-zinc-500 text-xs font-semibold tracking-[0.2em] uppercase">International Channels (PayPal & Keystone Bank Dom Account)</span>
+                  <span className="text-zinc-500 text-xs font-semibold tracking-[0.2em] uppercase">International Channels (Zenith Bank Dom, PayPal & Keystone Dom)</span>
                   <div className="h-[1px] flex-1 bg-zinc-800/40" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  {/* Zenith Bank USD Domiciliary Account */}
+                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-amber-500/30 hover:border-amber-400/60 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-amber-500/[0.03]">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-11 h-11 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/30 group-hover:scale-105 transition-transform text-amber-400">
+                          <Landmark className="w-5 h-5 text-amber-400" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20">
+                              USD ($) Domiciliary
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700">Official</span>
+                          </div>
+                          <h3 className="text-lg font-serif text-white">{BANK_DETAILS.dom.bankName}</h3>
+                        </div>
+                      </div>
+                      
+                      <QuickCopy value={BANK_DETAILS.dom.accountNumber} />
+                    </div>
+
+                    <p className="text-xs text-zinc-400 mb-5 leading-relaxed">{BANK_DETAILS.dom.description}</p>
+
+                    <div className="space-y-4 font-sans border-t border-zinc-800/50 pt-5">
+                      <div>
+                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Beneficiary</span>
+                        <p className="text-zinc-200 text-sm font-medium tracking-wide">{BANK_DETAILS.dom.accountName}</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/40">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Number (USD)</span>
+                          <p className="font-mono text-lg text-white font-bold tracking-wider">{BANK_DETAILS.dom.accountNumber}</p>
+                        </div>
+                        <button 
+                          onClick={() => setShowDomDetails(true)}
+                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap cursor-pointer"
+                        >
+                          <Info size={14} className="text-amber-400" />
+                          View Info
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Zenith Bank GBP (Pounds) Domiciliary Account */}
+                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-emerald-500/30 hover:border-emerald-400/60 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-emerald-500/[0.03]">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-11 h-11 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/30 group-hover:scale-105 transition-transform text-emerald-400">
+                          <Landmark className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-400/10 border border-emerald-400/20">
+                              GBP (£) Domiciliary
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700">Official</span>
+                          </div>
+                          <h3 className="text-lg font-serif text-white">{BANK_DETAILS.domGbp.bankName}</h3>
+                        </div>
+                      </div>
+                      
+                      <QuickCopy value={BANK_DETAILS.domGbp.accountNumber} />
+                    </div>
+
+                    <p className="text-xs text-zinc-400 mb-5 leading-relaxed">{BANK_DETAILS.domGbp.description}</p>
+
+                    <div className="space-y-4 font-sans border-t border-zinc-800/50 pt-5">
+                      <div>
+                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Beneficiary</span>
+                        <p className="text-zinc-200 text-sm font-medium tracking-wide">{BANK_DETAILS.domGbp.accountName}</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/40">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Number (GBP / Pounds)</span>
+                          <p className="font-mono text-lg text-white font-bold tracking-wider">{BANK_DETAILS.domGbp.accountNumber}</p>
+                        </div>
+                        <button 
+                          onClick={() => setShowGbpDomDetails(true)}
+                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap cursor-pointer"
+                        >
+                          <Info size={14} className="text-emerald-400" />
+                          View Info
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* PayPal Transfer Card */}
-                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 via-zinc-900/70 to-zinc-950 border border-sky-500/30 hover:border-sky-400/60 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-sky-500/[0.03] hover:shadow-sky-500/[0.08]">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl group-hover:bg-sky-500/15 transition-all pointer-events-none" />
-                    
+                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 via-zinc-900/70 to-zinc-950 border border-sky-500/30 hover:border-sky-400/60 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-sky-500/[0.03]">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                       <div className="flex items-center gap-3.5">
                         <div className="w-11 h-11 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/30 group-hover:scale-105 transition-transform text-sky-400">
@@ -328,7 +472,7 @@ export default function GivingHub() {
                         </a>
                         <button 
                           onClick={() => setShowPaypalDetails(true)}
-                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap"
+                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap cursor-pointer"
                         >
                           <Info size={14} className="text-sky-400" />
                           View Info
@@ -338,42 +482,40 @@ export default function GivingHub() {
                   </div>
 
                   {/* Keystone Bank Domiciliary Transfer Card */}
-                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-amber-500/20 hover:border-amber-500/40 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-amber-500/[0.02] hover:shadow-amber-500/[0.05]">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
-                    
+                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-zinc-800 hover:border-zinc-700 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 group-hover:scale-105 transition-transform">
-                          <Landmark className="w-5 h-5 text-amber-400" />
+                        <div className="w-11 h-11 bg-zinc-800/50 rounded-2xl flex items-center justify-center border border-zinc-700 group-hover:scale-105 transition-transform">
+                          <Landmark className="w-5 h-5 text-zinc-400" />
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20 inline-block mb-1">
-                            {BANK_DETAILS.dom.accountType}
+                          <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 inline-block mb-1">
+                            {BANK_DETAILS.domKeystone.accountType}
                           </span>
-                          <h3 className="text-lg font-serif text-white">Keystone Bank Dom Account</h3>
+                          <h3 className="text-lg font-serif text-white">{BANK_DETAILS.domKeystone.bankName}</h3>
                         </div>
                       </div>
                       
-                      <QuickCopy value={BANK_DETAILS.dom.accountNumber} />
+                      <QuickCopy value={BANK_DETAILS.domKeystone.accountNumber} />
                     </div>
 
-                    <p className="text-xs text-zinc-400 mb-5 leading-relaxed">{BANK_DETAILS.dom.description}</p>
+                    <p className="text-xs text-zinc-400 mb-5 leading-relaxed">{BANK_DETAILS.domKeystone.description}</p>
 
                     <div className="space-y-4 font-sans border-t border-zinc-800/50 pt-5">
                       <div>
                         <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Beneficiary</span>
-                        <p className="text-zinc-300 text-sm font-medium tracking-wide">{BANK_DETAILS.dom.accountName}</p>
+                        <p className="text-zinc-300 text-sm font-medium tracking-wide">{BANK_DETAILS.domKeystone.accountName}</p>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/40 p-3 rounded-xl border border-zinc-800/20">
                         <div className="min-w-0 flex-1">
                           <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Account Number (USD)</span>
-                          <p className="font-mono text-sm text-zinc-200 truncate">{BANK_DETAILS.dom.accountNumber}</p>
+                          <p className="font-mono text-sm text-zinc-200 truncate">{BANK_DETAILS.domKeystone.accountNumber}</p>
                         </div>
                         <button 
-                          onClick={() => setShowDomDetails(true)}
-                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap"
+                          onClick={() => setShowKeystoneDomDetails(true)}
+                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap cursor-pointer"
                         >
-                          <Info size={14} className="text-amber-400" />
+                          <Info size={14} className="text-zinc-400" />
                           View Info
                         </button>
                       </div>
@@ -384,9 +526,12 @@ export default function GivingHub() {
             )}
           </div>
         </div>
+
+        {/* Scannable QR Codes for Mobile Users */}
+        <GivingQRCodeSection />
       </div>
 
-      {/* Local Details Modal */}
+      {/* Zenith Local Details Modal */}
       <AnimatePresence>
         {showLocalDetails && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
@@ -409,11 +554,11 @@ export default function GivingHub() {
                   <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 inline-block mb-1">
                     {BANK_DETAILS.local.accountType}
                   </span>
-                  <h3 className="text-2xl font-serif text-white">{BANK_DETAILS.local.bankName} Info</h3>
+                  <h3 className="text-2xl font-serif text-white">{BANK_DETAILS.local.bankName}</h3>
                 </div>
                 <button 
                   onClick={() => setShowLocalDetails(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
                   &times;
                 </button>
@@ -423,6 +568,7 @@ export default function GivingHub() {
                 <DetailRow label="Bank Name" value={BANK_DETAILS.local.bankName} />
                 <DetailRow label="Account Name" value={BANK_DETAILS.local.accountName} />
                 <DetailRow label="Account Number" value={BANK_DETAILS.local.accountNumber} />
+                <DetailRow label="Currency" value="Nigerian Naira (NGN / ₦)" />
               </div>
 
               <div className="bg-zinc-900 aspect-[2.39/1] rounded-2xl border border-zinc-800/50 flex flex-col justify-center px-8 relative overflow-hidden mb-6">
@@ -435,9 +581,29 @@ export default function GivingHub() {
                 </div>
               </div>
 
+              {/* Scannable QR code snippet */}
+              <div className="flex items-center gap-4 bg-zinc-900/80 border border-amber-500/30 p-3.5 rounded-2xl mb-6">
+                <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
+                  <QRCodeSVG 
+                    value={`BANK: ${BANK_DETAILS.local.bankName}\nACCOUNT: ${BANK_DETAILS.local.accountNumber}\nNAME: ${BANK_DETAILS.local.accountName}\nPURPOSE: Tithe / Offering`} 
+                    size={72} 
+                    level="M" 
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-amber-400 font-semibold text-xs mb-0.5">
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Scan with Mobile Camera / Bank App</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">
+                    Point your smartphone camera to instantly copy Zenith account <strong className="text-white">{BANK_DETAILS.local.accountNumber}</strong>.
+                  </p>
+                </div>
+              </div>
+
               <button 
                 onClick={() => setShowLocalDetails(false)}
-                className="w-full py-4 bg-zinc-100 text-zinc-950 font-bold rounded-xl hover:bg-amber-400 hover:text-white transition-all shadow-lg"
+                className="w-full py-4 bg-gold text-zinc-950 font-bold rounded-xl hover:brightness-110 transition-all shadow-lg cursor-pointer text-xs uppercase tracking-wider"
               >
                 Close Details
               </button>
@@ -446,7 +612,87 @@ export default function GivingHub() {
         )}
       </AnimatePresence>
 
-      {/* Domiciliary Details Modal */}
+      {/* Keystone Local Details Modal */}
+      <AnimatePresence>
+        {showKeystoneLocalDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowKeystoneLocalDetails(false)}
+              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 inline-block mb-1">
+                    {BANK_DETAILS.localSecondary.accountType}
+                  </span>
+                  <h3 className="text-2xl font-serif text-white">{BANK_DETAILS.localSecondary.bankName}</h3>
+                </div>
+                <button 
+                  onClick={() => setShowKeystoneLocalDetails(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  &times;
+                </button>
+              </div>
+              
+              <div className="space-y-1 mb-8">
+                <DetailRow label="Bank Name" value={BANK_DETAILS.localSecondary.bankName} />
+                <DetailRow label="Account Name" value={BANK_DETAILS.localSecondary.accountName} />
+                <DetailRow label="Account Number" value={BANK_DETAILS.localSecondary.accountNumber} />
+                <DetailRow label="Currency" value="Nigerian Naira (NGN / ₦)" />
+              </div>
+
+              <div className="bg-zinc-900 aspect-[2.39/1] rounded-2xl border border-zinc-800/50 flex flex-col justify-center px-8 relative overflow-hidden mb-6">
+                <p className="text-zinc-500 text-[10px] uppercase tracking-widest mb-1 font-semibold">{BANK_DETAILS.localSecondary.bankName}</p>
+                <p className="text-xl font-mono text-white tracking-widest font-bold mb-4">{BANK_DETAILS.localSecondary.accountNumber.match(/.{1,4}/g)?.join(' ')}</p>
+                <div>
+                  <p className="text-zinc-500 text-[9px] uppercase tracking-widest">Account Holder</p>
+                  <p className="text-xs text-zinc-300 font-medium tracking-wide uppercase">{BANK_DETAILS.localSecondary.accountName}</p>
+                </div>
+              </div>
+
+              {/* Scannable QR code snippet */}
+              <div className="flex items-center gap-4 bg-zinc-900/80 border border-zinc-800 p-3.5 rounded-2xl mb-6">
+                <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
+                  <QRCodeSVG 
+                    value={`BANK: ${BANK_DETAILS.localSecondary.bankName}\nACCOUNT: ${BANK_DETAILS.localSecondary.accountNumber}\nNAME: ${BANK_DETAILS.localSecondary.accountName}`} 
+                    size={72} 
+                    level="M" 
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-zinc-300 font-semibold text-xs mb-0.5">
+                    <QrCode className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Scan with Mobile Camera / Bank App</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">
+                    Point your camera to copy Keystone account <strong className="text-white">{BANK_DETAILS.localSecondary.accountNumber}</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setShowKeystoneLocalDetails(false)}
+                className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-all shadow-lg cursor-pointer text-xs uppercase tracking-wider"
+              >
+                Close Details
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Zenith USD Domiciliary Details Modal */}
       <AnimatePresence>
         {showDomDetails && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
@@ -469,40 +715,213 @@ export default function GivingHub() {
                   <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 inline-block mb-1">
                     {BANK_DETAILS.dom.accountType}
                   </span>
-                  <h3 className="text-2xl font-serif text-white">{BANK_DETAILS.dom.bankName} Domiciliary</h3>
+                  <h3 className="text-2xl font-serif text-white">{BANK_DETAILS.dom.bankName}</h3>
                 </div>
                 <button 
                   onClick={() => setShowDomDetails(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
                   &times;
                 </button>
               </div>
               
               <div className="space-y-1 mb-6">
-                <DetailRow label="Bank Name" value={BANK_DETAILS.dom.bankName} />
+                <DetailRow label="Bank Name" value="Zenith Bank Plc" />
                 <DetailRow label="Account Name" value={BANK_DETAILS.dom.accountName} />
                 <DetailRow label="Account Number (USD)" value={BANK_DETAILS.dom.accountNumber} />
-                {BANK_DETAILS.dom.iban && <DetailRow label="IBAN" value={BANK_DETAILS.dom.iban} />}
-                {BANK_DETAILS.dom.swift && <DetailRow label="SWIFT Code" value={BANK_DETAILS.dom.swift} />}
-                {BANK_DETAILS.dom.sortCode && <DetailRow label="Sort Code" value={BANK_DETAILS.dom.sortCode} />}
-                {BANK_DETAILS.dom.bankAddress && <DetailRow label="Bank Address" value={BANK_DETAILS.dom.bankAddress} />}
+                <DetailRow label="Currency" value="US Dollars (USD / $)" />
                 <DetailRow label="Description" value={BANK_DETAILS.dom.description} />
               </div>
 
               <div className="bg-zinc-900 aspect-[2.39/1] rounded-2xl border border-zinc-800/50 flex flex-col justify-center px-8 relative overflow-hidden mb-6">
                 <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
-                <p className="text-zinc-500 text-[10px] uppercase tracking-widest mb-1 font-semibold">{BANK_DETAILS.dom.bankName} (USD)</p>
+                <p className="text-zinc-500 text-[10px] uppercase tracking-widest mb-1 font-semibold">Zenith Bank (USD Domiciliary)</p>
                 <p className="text-xl font-mono text-white tracking-widest font-bold mb-4">{BANK_DETAILS.dom.accountNumber.match(/.{1,4}/g)?.join(' ')}</p>
                 <div>
-                  <p className="text-zinc-500 text-[9px] uppercase tracking-widest">Account Holder</p>
+                  <p className="text-zinc-500 text-[9px] uppercase tracking-widest">Account Beneficiary</p>
                   <p className="text-xs text-zinc-300 font-medium tracking-wide uppercase">{BANK_DETAILS.dom.accountName}</p>
+                </div>
+              </div>
+
+              {/* Scannable QR code snippet */}
+              <div className="flex items-center gap-4 bg-zinc-900/80 border border-amber-500/30 p-3.5 rounded-2xl mb-6">
+                <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
+                  <QRCodeSVG 
+                    value={`BANK: ${BANK_DETAILS.dom.bankName}\nACCOUNT: ${BANK_DETAILS.dom.accountNumber}\nBENEFICIARY: ${BANK_DETAILS.dom.accountName}\nCURRENCY: USD ($)`} 
+                    size={72} 
+                    level="M" 
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-amber-400 font-semibold text-xs mb-0.5">
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Scan with Mobile Camera</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">
+                    Point your camera to scan USD Dom account <strong className="text-white">{BANK_DETAILS.dom.accountNumber}</strong>.
+                  </p>
                 </div>
               </div>
 
               <button 
                 onClick={() => setShowDomDetails(false)}
-                className="w-full py-4 bg-zinc-100 text-zinc-950 font-bold rounded-xl hover:bg-amber-400 hover:text-white transition-all shadow-lg"
+                className="w-full py-4 bg-gold text-zinc-950 font-bold rounded-xl hover:brightness-110 transition-all shadow-lg cursor-pointer text-xs uppercase tracking-wider"
+              >
+                Close Details
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Zenith GBP (Pounds) Domiciliary Details Modal */}
+      <AnimatePresence>
+        {showGbpDomDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowGbpDomDetails(false)}
+              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase px-2.5 py-1 rounded-full bg-emerald-400/10 border border-emerald-400/20 inline-block mb-1">
+                    {BANK_DETAILS.domGbp.accountType}
+                  </span>
+                  <h3 className="text-2xl font-serif text-white">{BANK_DETAILS.domGbp.bankName}</h3>
+                </div>
+                <button 
+                  onClick={() => setShowGbpDomDetails(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  &times;
+                </button>
+              </div>
+              
+              <div className="space-y-1 mb-6">
+                <DetailRow label="Bank Name" value="Zenith Bank Plc" />
+                <DetailRow label="Account Name" value={BANK_DETAILS.domGbp.accountName} />
+                <DetailRow label="Account Number (GBP / Pounds)" value={BANK_DETAILS.domGbp.accountNumber} />
+                <DetailRow label="Currency" value="British Pounds (GBP / £)" />
+                <DetailRow label="Description" value={BANK_DETAILS.domGbp.description} />
+              </div>
+
+              <div className="bg-zinc-900 aspect-[2.39/1] rounded-2xl border border-zinc-800/50 flex flex-col justify-center px-8 relative overflow-hidden mb-6">
+                <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+                <p className="text-zinc-500 text-[10px] uppercase tracking-widest mb-1 font-semibold">Zenith Bank (GBP Domiciliary)</p>
+                <p className="text-xl font-mono text-white tracking-widest font-bold mb-4">{BANK_DETAILS.domGbp.accountNumber.match(/.{1,4}/g)?.join(' ')}</p>
+                <div>
+                  <p className="text-zinc-500 text-[9px] uppercase tracking-widest">Account Beneficiary</p>
+                  <p className="text-xs text-zinc-300 font-medium tracking-wide uppercase">{BANK_DETAILS.domGbp.accountName}</p>
+                </div>
+              </div>
+
+              {/* Scannable QR code snippet */}
+              <div className="flex items-center gap-4 bg-zinc-900/80 border border-emerald-500/30 p-3.5 rounded-2xl mb-6">
+                <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
+                  <QRCodeSVG 
+                    value={`BANK: ${BANK_DETAILS.domGbp.bankName}\nACCOUNT: ${BANK_DETAILS.domGbp.accountNumber}\nBENEFICIARY: ${BANK_DETAILS.domGbp.accountName}\nCURRENCY: GBP (£)`} 
+                    size={72} 
+                    level="M" 
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-semibold text-xs mb-0.5">
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Scan with Mobile Camera</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">
+                    Point your camera to scan GBP Dom account <strong className="text-white">{BANK_DETAILS.domGbp.accountNumber}</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setShowGbpDomDetails(false)}
+                className="w-full py-4 bg-emerald-500 text-zinc-950 font-bold rounded-xl hover:bg-emerald-400 transition-all shadow-lg cursor-pointer text-xs uppercase tracking-wider"
+              >
+                Close Details
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Keystone Dom Details Modal */}
+      <AnimatePresence>
+        {showKeystoneDomDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowKeystoneDomDetails(false)}
+              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 inline-block mb-1">
+                    {BANK_DETAILS.domKeystone.accountType}
+                  </span>
+                  <h3 className="text-2xl font-serif text-white">{BANK_DETAILS.domKeystone.bankName}</h3>
+                </div>
+                <button 
+                  onClick={() => setShowKeystoneDomDetails(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  &times;
+                </button>
+              </div>
+              
+              <div className="space-y-1 mb-6">
+                <DetailRow label="Bank Name" value={BANK_DETAILS.domKeystone.bankName} />
+                <DetailRow label="Account Name" value={BANK_DETAILS.domKeystone.accountName} />
+                <DetailRow label="Account Number (USD)" value={BANK_DETAILS.domKeystone.accountNumber} />
+                {BANK_DETAILS.domKeystone.iban && <DetailRow label="IBAN" value={BANK_DETAILS.domKeystone.iban} />}
+                {BANK_DETAILS.domKeystone.swift && <DetailRow label="SWIFT Code" value={BANK_DETAILS.domKeystone.swift} />}
+                {BANK_DETAILS.domKeystone.sortCode && <DetailRow label="Sort Code" value={BANK_DETAILS.domKeystone.sortCode} />}
+                {BANK_DETAILS.domKeystone.bankAddress && <DetailRow label="Bank Address" value={BANK_DETAILS.domKeystone.bankAddress} />}
+              </div>
+
+              {/* Scannable QR code snippet */}
+              <div className="flex items-center gap-4 bg-zinc-900/80 border border-zinc-800 p-3.5 rounded-2xl mb-6">
+                <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
+                  <QRCodeSVG 
+                    value={`BANK: ${BANK_DETAILS.domKeystone.bankName}\nACCOUNT: ${BANK_DETAILS.domKeystone.accountNumber}\nSWIFT: ${BANK_DETAILS.domKeystone.swift}\nBENEFICIARY: ${BANK_DETAILS.domKeystone.accountName}`} 
+                    size={72} 
+                    level="M" 
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-zinc-300 font-semibold text-xs mb-0.5">
+                    <QrCode className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Scan with Mobile Camera</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">
+                    Point your camera to scan Keystone USD Dom account <strong className="text-white">{BANK_DETAILS.domKeystone.accountNumber}</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setShowKeystoneDomDetails(false)}
+                className="w-full py-4 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all shadow-lg cursor-pointer text-xs uppercase tracking-wider"
               >
                 Close Details
               </button>
@@ -558,6 +977,26 @@ export default function GivingHub() {
                   <h4 className="text-xs font-bold text-sky-400 uppercase tracking-wider mb-1">PayPal Transfer Note</h4>
                   <p className="text-xs text-zinc-300 leading-relaxed">
                     When sending funds via PayPal, kindly include your name and giving category (e.g. <span className="text-white font-medium">Tithe, Offering, Seed, or Ministry Gift</span>) in the transfer note.
+                  </p>
+                </div>
+              </div>
+
+              {/* Scannable PayPal QR code snippet */}
+              <div className="flex items-center gap-4 bg-zinc-900/80 border border-sky-500/30 p-3.5 rounded-2xl mb-6">
+                <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
+                  <QRCodeSVG 
+                    value={`https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=${encodeURIComponent(BANK_DETAILS.paypal.email)}&item_name=${encodeURIComponent('Kingdom Giving - Photizo Porch')}`}
+                    size={72} 
+                    level="M" 
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-sky-400 font-semibold text-xs mb-0.5">
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Scan to Open PayPal</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">
+                    Camera scan opens PayPal giving directly on your mobile device for <strong className="text-white">{BANK_DETAILS.paypal.email}</strong>.
                   </p>
                 </div>
               </div>

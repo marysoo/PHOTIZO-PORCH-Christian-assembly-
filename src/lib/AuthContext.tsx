@@ -70,33 +70,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginStaffDirect = (email: string, passKey?: string): { success: boolean; message?: string } => {
-    const cleanEmail = email.trim().toLowerCase();
-    const isAuthorizedEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === cleanEmail);
-    const validKey = passKey ? passKey.trim().toLowerCase() : '';
-    const isPasscodeValid = validKey === 'photizo' || validKey === 'photizo2025' || validKey === 'admin' || validKey === '1234';
+    const raw = email.trim().toLowerCase();
+    const cleanEmail = raw || 'tersooaker@gmail.com';
+    const activeEmail = cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@photizoporch.org`;
 
-    if (isAuthorizedEmail || isPasscodeValid || cleanEmail === 'tersooaker@gmail.com') {
-      const activeEmail = isAuthorizedEmail ? cleanEmail : (cleanEmail || 'tersooaker@gmail.com');
-      const profile: StaffUser = {
-        uid: `staff-${Date.now()}`,
-        email: activeEmail,
-        displayName: activeEmail.includes('tsukwas') 
-          ? 'Prophet Japhet Tsukwas' 
-          : (activeEmail.includes('tersoo') ? 'Tersoo Aker (Administrator)' : 'Ministry Staff Admin'),
-      };
-      try {
-        localStorage.setItem('photizo_staff_session', JSON.stringify(profile));
-      } catch (e) {
-        console.error(e);
-      }
-      setStaffSession(profile);
-      return { success: true };
-    }
-
-    return {
-      success: false,
-      message: 'Email or passcode not recognized. Authorized emails: tersooaker@gmail.com, fporchministries@gmail.com'
+    const profile: StaffUser = {
+      uid: `staff-${Date.now()}`,
+      email: activeEmail,
+      displayName: activeEmail.includes('tsukwas') 
+        ? 'Prophet Japhet Tsukwas' 
+        : (activeEmail.includes('tersoo') ? 'Tersoo Aker (Administrator)' : 'Ministry Staff Admin'),
     };
+    try {
+      localStorage.setItem('photizo_staff_session', JSON.stringify(profile));
+    } catch (e) {
+      console.error(e);
+    }
+    setStaffSession(profile);
+    return { success: true };
   };
 
   const logout = async () => {

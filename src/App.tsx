@@ -248,7 +248,7 @@ export default function App() {
             subtitle: 'Enlightening hearts with the knowledge of God\'s glory.',
             content: "Photizo Porch Christian Assembly is more than a church; it is a portal of divine illumination. Our name, derived from the Greek 'Photizo,' signifies our sacred mandate to enlighten hearts and manifest kingdom excellence.\n\nUnder the leadership of Prophet Japeth Tsukwas, we are building a global community dedicated to supernatural manifestations and purposeful living.",
             order: 1,
-            imageUrl: ""
+            imageUrl: "/user_uploads/upload_6_Engrossed_in_worship.webp"
           }
         ];
         initial.forEach(s => firebaseService.upsertSection(s));
@@ -262,8 +262,8 @@ export default function App() {
         }
 
         const aboutSec = correctedData.find(s => s.sectionId === 'about');
-        if (aboutSec && aboutSec.imageUrl && (aboutSec.imageUrl.includes('prophet_japhet') || aboutSec.imageUrl.includes('humanitarian'))) {
-          aboutSec.imageUrl = "";
+        if (aboutSec && (!aboutSec.imageUrl || aboutSec.imageUrl === '')) {
+          aboutSec.imageUrl = "/user_uploads/upload_6_Engrossed_in_worship.webp";
           firebaseService.upsertSection(aboutSec);
         }
       }
@@ -622,8 +622,9 @@ export default function App() {
               </header>
             ) : section.sectionId === 'about' ? (
               <section id="about" className="py-24 px-6 border-y border-zinc-900 bg-zinc-950/50">
-                <div className={`max-w-6xl mx-auto ${section.imageUrl || effectiveIsAdmin ? 'grid md:grid-cols-2 gap-16 items-center' : 'max-w-3xl text-center'}`}>
-                  {(section.imageUrl || effectiveIsAdmin) && (
+                <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+                  {/* Left Column: Pastor's Photo & Image Controls */}
+                  <div className="space-y-4">
                     <div 
                       className={`relative aspect-[4/5] rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900 ${
                         dragActive 
@@ -640,11 +641,11 @@ export default function App() {
                         }
                       }}
                     >
-                      {section.imageUrl ? (
+                      {section.imageUrl !== 'none' ? (
                         <>
                           <img 
                             src={section.imageUrl || "/user_uploads/upload_6_Engrossed_in_worship.webp"} 
-                            alt="Ministry" 
+                            alt="Prophet Japhet Tsukwas - Photizo Porch Christian Assembly" 
                             decoding="async"
                             onClick={() => setAboutLightboxUrl(section.imageUrl || "/user_uploads/upload_6_Engrossed_in_worship.webp")}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105 cursor-pointer"
@@ -657,90 +658,123 @@ export default function App() {
                               }
                             }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/85 via-transparent to-transparent pointer-events-none" />
                           
-                          {/* Admin Overlay Controls directly on image */}
-                          {effectiveIsAdmin && (
-                            <div className="absolute inset-0 flex flex-col justify-between p-6 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity z-10">
-                              <div className="flex justify-between items-start">
-                                <span className="bg-zinc-950/90 text-gold text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-zinc-800">
-                                  About Image
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setAboutLightboxUrl(section.imageUrl!);
-                                    }}
-                                    className="p-2.5 bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-gold rounded-full transition-all cursor-pointer shadow-lg hover:scale-105"
-                                    title="View Original Photo"
-                                  >
-                                    <ImageIcon className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleAboutImageDelete(section);
-                                    }}
-                                    className="p-2.5 bg-red-950/90 hover:bg-red-600 border border-red-500/30 text-red-200 hover:text-white rounded-full transition-all cursor-pointer shadow-lg hover:scale-105"
-                                    title="Delete Image"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="flex justify-center">
-                                <label className="flex items-center gap-2 px-5 py-3 bg-gold hover:bg-amber-500 text-zinc-950 font-bold text-xs rounded-full cursor-pointer shadow-xl hover:scale-105 active:scale-95 transition-all">
-                                  <Camera className="w-4 h-4" />
-                                  Change Image
-                                  <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    className="hidden" 
-                                    onChange={(e) => {
-                                      if (e.target.files?.[0]) {
-                                        handleAboutImageUpload(e.target.files[0], section);
-                                      }
-                                    }}
-                                  />
-                                </label>
-                              </div>
-                            </div>
-                          )}
+                          {/* Pastor Caption Overlay */}
+                          <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none">
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-gold px-2.5 py-1 rounded-full bg-zinc-950/80 border border-gold/30 backdrop-blur-md">
+                              Ministry Altar & Leadership
+                            </span>
+                            <h4 className="text-white font-serif text-lg sm:text-xl font-bold mt-1.5 drop-shadow-md">
+                              {LEADERS.prophet}
+                            </h4>
+                            <p className="text-xs text-zinc-300 drop-shadow">
+                              General Overseer, Photizo Porch Christian Assembly
+                            </p>
+                          </div>
                         </>
                       ) : (
-                        /* Empty/Deleted State (Only visible to admin to upload) */
-                        effectiveIsAdmin && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-zinc-800 hover:border-gold/50 rounded-3xl transition-all animate-pulse">
-                            <div className="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center mb-4 text-zinc-500">
-                              <Upload className="w-8 h-8" />
-                            </div>
-                            <h4 className="text-lg font-bold text-zinc-300 mb-1">Add About Image</h4>
-                            <p className="text-xs text-zinc-500 mb-6 max-w-xs">Drag and drop an image file here, or click the button below to browse</p>
-                            <label className="flex items-center gap-2 px-5 py-3 bg-zinc-900 hover:bg-zinc-850 text-gold border border-gold/30 hover:border-gold/60 font-bold text-xs rounded-full cursor-pointer shadow-xl transition-all">
-                              <Camera className="w-4 h-4" />
-                              Browse Image
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={(e) => {
-                                  if (e.target.files?.[0]) {
-                                    handleAboutImageUpload(e.target.files[0], section);
-                                  }
-                                }}
-                              />
-                            </label>
+                        /* Empty/Deleted State (Admin can restore or browse) */
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-zinc-800 rounded-3xl">
+                          <div className="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center mb-4 text-zinc-500">
+                            <Upload className="w-8 h-8" />
                           </div>
-                        )
+                          <h4 className="text-lg font-bold text-zinc-300 mb-1">About Image Removed</h4>
+                          <p className="text-xs text-zinc-500 mb-5 max-w-xs">Upload a new photo or restore the original photo of Prophet Japhet Tsukwas.</p>
+                          {effectiveIsAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                firebaseService.upsertSection({
+                                  ...section,
+                                  imageUrl: '/user_uploads/upload_6_Engrossed_in_worship.webp'
+                                });
+                              }}
+                              className="px-4 py-2 bg-gold text-zinc-950 font-bold text-xs rounded-full cursor-pointer shadow-lg hover:brightness-110 transition-all"
+                            >
+                              Restore Pastor's Photo
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                  <div className={section.imageUrl || effectiveIsAdmin ? '' : 'max-w-3xl mx-auto'}>
-                    <h2 className="text-4xl md:text-5xl font-serif mb-8 glow-text">{section.title}</h2>
-                    <div className="prose prose-invert max-w-none text-zinc-400 text-lg leading-relaxed space-y-6">
+
+                    {/* Dedicated Admin Action Bar for About Image */}
+                    {effectiveIsAdmin && (
+                      <div className="p-3 bg-zinc-900/90 rounded-2xl border border-zinc-800 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+                        <div className="flex items-center gap-1.5">
+                          <label className="flex items-center gap-1.5 px-3 py-1.5 bg-gold hover:bg-amber-500 text-zinc-950 font-bold text-xs rounded-xl cursor-pointer shadow-md transition-all">
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>Change Photo</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  handleAboutImageUpload(e.target.files[0], section);
+                                }
+                              }}
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              firebaseService.upsertSection({
+                                ...section,
+                                imageUrl: '/user_uploads/upload_6_Engrossed_in_worship.webp'
+                              });
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-gold text-xs font-semibold rounded-xl cursor-pointer transition-all"
+                            title="Restore default photo of Prophet Japhet Tsukwas"
+                          >
+                            <ImageIcon className="w-3.5 h-3.5" />
+                            <span>Restore Pastor's Photo</span>
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setAboutLightboxUrl(section.imageUrl || "/user_uploads/upload_6_Engrossed_in_worship.webp")}
+                            className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white rounded-xl cursor-pointer transition-all"
+                            title="View Fullscreen"
+                          >
+                            <ImageIcon className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              firebaseService.upsertSection({
+                                ...section,
+                                imageUrl: 'none'
+                              });
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-950/70 hover:bg-red-900 text-red-200 border border-red-800/40 text-xs font-semibold rounded-xl cursor-pointer transition-all"
+                            title="Delete / Hide photo from About section"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete Photo</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Column: About Us Content & Text */}
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-4">
+                      <span className="text-xs font-mono uppercase tracking-[0.25em] text-gold px-3 py-1 rounded-full bg-gold/10 border border-gold/30">
+                        Sanctuary Mandate
+                      </span>
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-serif mb-6 glow-text">{section.title}</h2>
+                    <p className="text-lg text-zinc-300 font-light mb-6 italic border-l-2 border-gold/60 pl-4">
+                      {section.subtitle}
+                    </p>
+                    <div className="prose prose-invert max-w-none text-zinc-400 text-base sm:text-lg leading-relaxed space-y-4">
                       <Markdown>{section.content}</Markdown>
                     </div>
                   </div>

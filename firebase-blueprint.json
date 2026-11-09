@@ -144,7 +144,10 @@
         "senderName": { "type": "string" },
         "message": { "type": "string" },
         "createdAt": { "type": "string" },
-        "role": { "type": "string", "enum": ["member", "pastor", "admin"] }
+        "role": { "type": "string", "enum": ["member", "pastor", "admin"] },
+        "senderId": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "isEdited": { "type": "boolean" }
       },
       "required": ["senderName", "message", "createdAt"]
     },

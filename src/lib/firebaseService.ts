@@ -47,11 +47,12 @@ export interface PrayerRequest {
 export interface LiveStream {
   isLive: boolean;
   streamId: string;
-  platform: 'youtube' | 'vimeo';
+  platform: 'youtube' | 'facebook' | 'vimeo';
   title?: string;
   hideChat?: boolean;
   defaultVideoId?: string; // YouTube video ID or link for existing replay when off-air
   defaultVideoTitle?: string;
+  facebookUrl?: string; // Facebook Live URL or video embed
 }
 
 export interface LiveChatMessage {
@@ -60,6 +61,9 @@ export interface LiveChatMessage {
   message: string;
   createdAt: string;
   role?: 'member' | 'pastor' | 'admin';
+  senderId?: string;
+  updatedAt?: string;
+  isEdited?: boolean;
 }
 
 export interface ChurchEvent {
@@ -351,7 +355,8 @@ export const DEFAULT_STREAM: LiveStream = {
   title: 'Photizo Porch Divine Service Broadcast',
   hideChat: false,
   defaultVideoId: 'gYjT55c-k_A',
-  defaultVideoTitle: 'Hour of Divine Worship & Apostolic Glory'
+  defaultVideoTitle: 'Hour of Divine Worship & Apostolic Glory',
+  facebookUrl: 'https://www.facebook.com/share/1BagLykc5j/'
 };
 
 export const DEFAULT_SECTIONS: PageSection[] = [
@@ -667,16 +672,53 @@ export const firebaseService = {
     }
   },
 
-  // Real-Time Live Stream Chat
+  // Real-Time Live Stream Chat (Sustained strictly for 24 hours, auto-deleting older messages)
   subscribeLiveChat(callback: (messages: LiveChatMessage[]) => void) {
     const path = 'liveChatMessages';
-    const q = query(collection(db, path), orderBy('createdAt', 'asc'), limit(150));
-    return onSnapshot(q, (snap) => {
-      const messages = snap.docs.map(d => ({ id: d.id, ...d.data() } as LiveChatMessage));
-      callback(messages);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, path);
+    const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+    
+    // Provide cached messages from last 24h
+    const cached = getLocalCache<LiveChatMessage[]>('liveChatMessages', []);
+    const initialCutoff = Date.now() - TWENTY_FOUR_HOURS_MS;
+    const initialFiltered = cached.filter(m => {
+      const t = new Date(m.createdAt).getTime();
+      return !isNaN(t) && t >= initialCutoff;
     });
+    callback(initialFiltered);
+
+    try {
+      const q = query(collection(db, path), orderBy('createdAt', 'asc'), limit(250));
+      return onSnapshot(q, (snap) => {
+        const now = Date.now();
+        const cutoff = now - TWENTY_FOUR_HOURS_MS;
+        const validMessages: LiveChatMessage[] = [];
+        const expiredDocIds: string[] = [];
+
+        snap.docs.forEach(d => {
+          const data = d.data() as LiveChatMessage;
+          const msgTime = new Date(data.createdAt).getTime();
+          if (!isNaN(msgTime) && msgTime < cutoff) {
+            expiredDocIds.push(d.id);
+          } else {
+            validMessages.push({ id: d.id, ...data });
+          }
+        });
+
+        // Background auto-delete: purge all messages older than 24 hours from Firestore
+        if (expiredDocIds.length > 0) {
+          expiredDocIds.forEach(id => {
+            deleteDoc(doc(db, 'liveChatMessages', id)).catch(() => {});
+          });
+        }
+
+        setLocalCache('liveChatMessages', validMessages);
+        callback(validMessages);
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, path);
+      });
+    } catch {
+      return () => {};
+    }
   },
 
   async sendLiveChatMessage(msg: Omit<LiveChatMessage, 'id'>) {
@@ -686,6 +728,25 @@ export const firebaseService = {
       await setDoc(doc(db, 'liveChatMessages', messageId), msg);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async editLiveChatMessage(messageId: string, newMessage: string) {
+    const path = `liveChatMessages/${messageId}`;
+    try {
+      const snap = await getDoc(doc(db, 'liveChatMessages', messageId));
+      if (snap.exists()) {
+        const existing = snap.data() as LiveChatMessage;
+        const updated: LiveChatMessage = {
+          ...existing,
+          message: newMessage.trim(),
+          updatedAt: new Date().toISOString(),
+          isEdited: true
+        };
+        await setDoc(doc(db, 'liveChatMessages', messageId), updated);
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
     }
   },
 

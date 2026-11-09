@@ -41,16 +41,18 @@ export default function EditableSection({ section, isAdmin, children }: Editable
 
   return (
     <div className="relative group/section border-2 border-transparent hover:border-gold/20 transition-all rounded-3xl">
-      <div className="absolute -top-4 -right-4 z-40 opacity-0 group-hover/section:opacity-100 transition-opacity flex gap-2">
+      <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
         <button 
+          type="button"
           onClick={() => {
             setFormData(section);
             setIsEditing(true);
           }}
-          className="p-2 bg-zinc-900 border border-gold/50 text-gold rounded-full hover:bg-gold hover:text-white transition-all shadow-xl cursor-pointer"
-          title="Edit Section Content & Image"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-950/95 border border-gold/60 text-gold rounded-full hover:bg-gold hover:text-zinc-950 text-xs font-bold transition-all shadow-xl cursor-pointer backdrop-blur-md"
+          title="Edit Section Content & Photo"
         >
-          <Edit2 size={16} />
+          <Edit2 size={13} />
+          <span>Edit Section</span>
         </button>
       </div>
 
@@ -158,6 +160,17 @@ export default function EditableSection({ section, isAdmin, children }: Editable
                     onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-zinc-100 focus:border-gold outline-none mt-2"
                   />
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, imageUrl: '/user_uploads/upload_6_Engrossed_in_worship.webp' })}
+                      className="px-3 py-1.5 rounded-lg bg-zinc-950 border border-gold/40 text-gold hover:bg-gold hover:text-zinc-950 text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5"
+                    >
+                      <Camera size={13} />
+                      <span>Use Pastor's Photo (Prophet Japhet)</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

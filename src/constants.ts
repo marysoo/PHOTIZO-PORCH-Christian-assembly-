@@ -26,14 +26,38 @@ export const GIVING_OPTIONS = [
 
 export const BANK_DETAILS = {
   local: {
+    bankName: "Zenith Bank",
+    accountName: "PHOTIZO PORCH CHRISTIAN ASSEMBLY",
+    accountNumber: "1312595176",
+    accountType: "Local Account (Naira)",
+    description: "Primary local church account for tithes, offerings, partnerships, and seeds"
+  },
+  localSecondary: {
     bankName: "Keystone Bank",
     accountName: "PHOTIZO PORCH CHRISTIAN ASSEMBLY",
     accountNumber: "1013244531",
-    accountType: "Ministry Account",
+    accountType: "Local Account (Naira)",
     description: "For local tithes, offerings, seeds, and partnership in Nigeria"
   },
   dom: {
-    bankName: "KEYSTONE BANK / SKY BANK DOM",
+    bankName: "Zenith Bank (USD Domiciliary)",
+    currency: "USD ($)",
+    accountName: "PHOTIZO PORCH CHRISTIAN ASSEMBLY",
+    accountNumber: "5076124603",
+    accountType: "Domiciliary Account (USD)",
+    description: "Official United States Dollar Domiciliary Account for international followers, partners, and kingdom builders"
+  },
+  domGbp: {
+    bankName: "Zenith Bank (Pounds / GBP Domiciliary)",
+    currency: "GBP (£)",
+    accountName: "PHOTIZO PORCH CHRISTIAN ASSEMBLY",
+    accountNumber: "5061826541",
+    accountType: "Domiciliary Account (POUNDS / GBP)",
+    description: "Official British Pounds Domiciliary Account for UK, European, and worldwide global partners"
+  },
+  domKeystone: {
+    bankName: "Keystone Bank / Sky Bank Dom",
+    currency: "USD ($)",
     accountName: "PHOTIZO PORCH CHRISTIAN ASSEMBLY",
     accountNumber: "1014165093",
     iban: "GB90CITI18500812690365",
@@ -41,7 +65,7 @@ export const BANK_DETAILS = {
     sortCode: "082300809",
     bankAddress: "1 KEYSTONE BANK CRESCENT, OFF ADEYEMO ALAKIJA STR, LAGOS",
     accountType: "Ministry Domiciliary Account (USD)",
-    description: "For international followers wishing to give directly to the Ministry's USD Domiciliary Account"
+    description: "USD Domiciliary Account via Keystone Bank"
   },
   paypal: {
     email: "tsukwasjapheth01@gmail.com",
