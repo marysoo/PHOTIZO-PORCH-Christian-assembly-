@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube, Trash2, Camera, Upload, Info, Image as ImageIcon, Calendar, Headphones, BookOpen, HeartHandshake, Radio, ShieldCheck, Loader2 } from 'lucide-react';
+import { Mail, MessageCircle, Phone, Menu, X, ArrowRight, Sparkles, LogIn, LogOut, Facebook, Youtube, Trash2, Camera, Upload, Info, Image as ImageIcon, Calendar, Headphones, BookOpen, HeartHandshake, Radio, ShieldCheck, Loader2, Send } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { MINISTRY_NAME, LEADERS, CONTACT_INFO } from './constants';
 import GivingHub from './components/GivingHub';
@@ -8,7 +8,6 @@ import EventsCalendar from './components/EventsCalendar';
 import AudioSermons from './components/AudioSermons';
 import LiveStreamHero from './components/LiveStreamHero';
 import { useAuth } from './lib/AuthContext';
-import { login, logout } from './lib/firebase';
 import { PageSection, firebaseService, DEFAULT_SECTIONS } from './lib/firebaseService';
 import { optimizeImageFile } from './lib/imageOptimizer';
 import EditableSection from './components/EditableSection';
@@ -19,6 +18,7 @@ import TestimonialCarousel from './components/TestimonialCarousel';
 import Markdown from 'react-markdown';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import StaffPortalModal from './components/StaffPortalModal';
+import PageScroller from './components/PageScroller';
 
 const renderHeroTitle = (title: string) => {
   let displayTitle = title;
@@ -98,12 +98,27 @@ const renderHeroTitle = (title: string) => {
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAdmin: actualIsAdmin } = useAuth();
+  const { user, isAdmin: actualIsAdmin, logout } = useAuth();
   const [dragActive, setDragActive] = useState(false);
   const [aboutLightboxUrl, setAboutLightboxUrl] = useState<string | null>(null);
   const [isStreamLive, setIsStreamLive] = useState(false);
   const [isTogglingLive, setIsTogglingLive] = useState(false);
   const [adminToast, setAdminToast] = useState<string | null>(null);
+
+  const handleAdminLogout = async () => {
+    try {
+      setIsEditMode(false);
+      await logout();
+      try {
+        localStorage.removeItem('photizo_staff_session');
+        localStorage.removeItem('photizo_admin_session');
+      } catch {}
+      setAdminToast('Admin logged out successfully');
+      setTimeout(() => setAdminToast(null), 3000);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   const handleToggleLiveDirect = async () => {
     setIsTogglingLive(true);
@@ -342,7 +357,7 @@ export default function App() {
 
           {/* Admin Logout */}
           <button 
-            onClick={logout}
+            onClick={handleAdminLogout}
             className="p-2 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
             title="Logout Admin"
           >
@@ -524,7 +539,7 @@ export default function App() {
                           <ShieldCheck size={16} /> Admin Authenticated
                         </div>
                         <button 
-                          onClick={() => { logout(); setIsMenuOpen(false); }}
+                          onClick={() => { handleAdminLogout(); setIsMenuOpen(false); }}
                           className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-semibold cursor-pointer"
                         >
                           <LogOut size={14} /> Logout
@@ -567,6 +582,50 @@ export default function App() {
                       <span>Staff & Admin Portal Sign In</span>
                     </button>
                   )}
+                </div>
+
+                {/* Quick Social & Community Channels */}
+                <div className="pt-3 border-t border-zinc-900/80 flex items-center justify-center gap-3">
+                  <a 
+                    href={`https://wa.me/${CONTACT_INFO.whatsapp.replace(/\s/g, '')}`} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-green-500/50 text-zinc-400 hover:text-green-400 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                    title="WhatsApp Community"
+                  >
+                    <MessageCircle size={15} className="text-green-500" />
+                    <span>WhatsApp</span>
+                  </a>
+                  <a 
+                    href={CONTACT_INFO.telegram} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-sky-500/50 text-zinc-400 hover:text-sky-400 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                    title="Official Telegram Channel"
+                  >
+                    <Send size={15} className="text-[#229ED9]" />
+                    <span>Telegram</span>
+                  </a>
+                  <a 
+                    href={CONTACT_INFO.facebook} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 text-zinc-400 hover:text-blue-400 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                    title="Facebook Page"
+                  >
+                    <Facebook size={15} className="text-[#1877F2]" />
+                    <span>Facebook</span>
+                  </a>
+                  <a 
+                    href={CONTACT_INFO.youtube} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-red-500/50 text-zinc-400 hover:text-red-400 transition-all flex items-center gap-1.5 text-xs font-semibold"
+                    title="YouTube Channel"
+                  >
+                    <Youtube size={15} className="text-red-500" />
+                    <span>YouTube</span>
+                  </a>
                 </div>
               </div>
             </motion.div>
@@ -860,11 +919,16 @@ export default function App() {
       <section id="contact" className="py-24 px-6 bg-zinc-900/20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl font-serif mb-16 glow-text">Connect with Us</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
             <a href={`https://wa.me/${CONTACT_INFO.whatsapp.replace(/\s/g, '')}`} target="_blank" rel="noreferrer" className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800 hover:border-green-500/50 transition-all group">
               <MessageCircle className="w-8 h-8 text-green-500 mb-4 mx-auto group-hover:scale-110 transition-transform" />
               <h3 className="font-bold mb-2">WhatsApp</h3>
-              <p className="text-zinc-500 text-sm">{CONTACT_INFO.whatsapp}</p>
+              <p className="text-zinc-500 text-sm">Chat & Counseling</p>
+            </a>
+            <a href={CONTACT_INFO.telegram} target="_blank" rel="noreferrer" className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800 hover:border-sky-500/50 transition-all group">
+              <Send className="w-8 h-8 text-[#229ED9] mb-4 mx-auto group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold mb-2">Telegram</h3>
+              <p className="text-zinc-500 text-sm">Official Channel</p>
             </a>
             <a href={CONTACT_INFO.facebook} target="_blank" rel="noreferrer" className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 transition-all group">
               <Facebook className="w-8 h-8 text-blue-500 mb-4 mx-auto group-hover:scale-110 transition-transform" />
@@ -902,6 +966,9 @@ export default function App() {
           <div className="flex flex-wrap justify-center gap-8 text-xs text-zinc-500 uppercase tracking-widest font-medium">
             <a href="#" className="hover:text-gold transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-gold transition-colors">Terms of Service</a>
+            <a href={CONTACT_INFO.telegram} target="_blank" rel="noreferrer" className="hover:text-gold transition-colors flex items-center gap-1">
+              <Send size={12} className="text-[#229ED9]" /> Telegram
+            </a>
             <a href={CONTACT_INFO.facebook} target="_blank" rel="noreferrer" className="hover:text-gold transition-colors flex items-center gap-1">
               <Facebook size={12} /> Facebook
             </a>
@@ -967,6 +1034,9 @@ export default function App() {
 
       {/* Persistent Floating Theme Switcher Widget */}
       <ThemeSwitcher variant="floating" />
+
+      {/* Persistent Floating Up/Down Page Scroller */}
+      <PageScroller isAdmin={Boolean(actualIsAdmin)} />
 
       {/* Staff & Admin Portal Modal */}
       <StaffPortalModal

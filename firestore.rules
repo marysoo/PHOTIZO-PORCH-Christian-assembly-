@@ -111,7 +111,11 @@ service cloud.firestore {
              (!('senderId' in data) || (data.senderId is string && data.senderId.size() <= 128)) &&
              (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50)) &&
              (!('isEdited' in data) || data.isEdited is bool) &&
-             (!('role' in data) || (data.role is string && data.role in ['member', 'pastor', 'admin']));
+             (!('role' in data) || (data.role is string && data.role in ['member', 'pastor', 'admin'])) &&
+             (!('replyToId' in data) || (data.replyToId is string && data.replyToId.size() <= 128)) &&
+             (!('replyToSender' in data) || (data.replyToSender is string && data.replyToSender.size() <= 100)) &&
+             (!('replyToText' in data) || (data.replyToText is string && data.replyToText.size() <= 500)) &&
+             (!('reactions' in data) || data.reactions is map);
     }
 
     // Rules

@@ -12,7 +12,10 @@ import {
   X, 
   Edit2, 
   Check, 
-  Clock 
+  Clock,
+  Reply,
+  Smile,
+  Plus
 } from 'lucide-react';
 import { firebaseService, LiveChatMessage } from '../lib/firebaseService';
 import { useAuth } from '../lib/AuthContext';
@@ -35,6 +38,8 @@ const QUICK_REACTIONS = [
   "Watching from USA 🇺🇸"
 ];
 
+const CHAT_EMOJI_REACTIONS = ['🙏', '❤️', '🔥', '🙌', '✝️', '👏'];
+
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
 export default function LiveStreamChat({ isAdmin = false, className = '', onHide }: LiveStreamChatProps) {
@@ -47,8 +52,9 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
   const [isEditingName, setIsEditingName] = useState(!senderName);
   const [isSending, setIsSending] = useState(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(false);
 
-  // Persistent Client User ID so users can edit and manage their own chats
+  // Persistent Client User ID so users can edit, react, and manage their own chats
   const [chatUserId] = useState<string>(() => {
     let id = localStorage.getItem('photizo_chat_user_id');
     if (!id) {
@@ -58,6 +64,14 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
     return id;
   });
 
+  const effectiveSenderId = user?.uid || chatUserId;
+
+  // Replying & Quoting State
+  const [replyingTo, setReplyingTo] = useState<LiveChatMessage | null>(null);
+
+  // Active Emoji Picker per message
+  const [activeReactionPickerId, setActiveReactionPickerId] = useState<string | null>(null);
+
   // Inline Message Editing State
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -65,6 +79,7 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
 
   // Sync sender name when Google user logs in
   useEffect(() => {
@@ -101,16 +116,22 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
     return () => clearInterval(interval);
   }, []);
 
-  // Auto scroll to bottom
+  // Scroll to bottom (Strictly inside chat container; NEVER scrolls the page or browser window)
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    messagesEndRef.current?.scrollIntoView({ behavior });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior
+      });
+    }
   };
 
   useEffect(() => {
-    if (!showScrollBottom) {
+    // Only auto-scroll when user has explicitly enabled auto-scroll
+    if (autoScroll && !showScrollBottom) {
       scrollToBottom('smooth');
     }
-  }, [messages]);
+  }, [messages, autoScroll]);
 
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
@@ -133,16 +154,26 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
     setIsSending(true);
     try {
       const role: LiveChatMessage['role'] = isAdmin ? 'admin' : (user?.email?.includes('tsukwas') ? 'pastor' : 'member');
-      await firebaseService.sendLiveChatMessage({
+      const newMsgData: Omit<LiveChatMessage, 'id'> = {
         senderName: finalName,
         message: textToSend,
         createdAt: new Date().toISOString(),
         role,
-        senderId: user?.uid || chatUserId
-      });
+        senderId: effectiveSenderId
+      };
+
+      if (replyingTo) {
+        newMsgData.replyToId = replyingTo.id;
+        newMsgData.replyToSender = replyingTo.senderName;
+        newMsgData.replyToText = replyingTo.message.slice(0, 160);
+      }
+
+      await firebaseService.sendLiveChatMessage(newMsgData);
+      
       if (customText === undefined) {
         setInputText('');
       }
+      setReplyingTo(null);
       setShowScrollBottom(false);
       setTimeout(() => scrollToBottom('smooth'), 100);
     } catch (e) {
@@ -165,6 +196,55 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
       setSenderName(trimmed);
       localStorage.setItem('photizo_chat_username', trimmed);
       setIsEditingName(false);
+    }
+  };
+
+  const handleStartReply = (msg: LiveChatMessage) => {
+    setReplyingTo(msg);
+    setTimeout(() => {
+      chatInputRef.current?.focus();
+    }, 50);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+  };
+
+  const handleReaction = async (messageId: string, emoji: string) => {
+    setActiveReactionPickerId(null);
+    // Optimistic UI update
+    setMessages(prev => prev.map(m => {
+      if (m.id !== messageId) return m;
+      const reactions: Record<string, string[]> = m.reactions ? { ...m.reactions } : {};
+      const current = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+      if (current.includes(effectiveSenderId)) {
+        const filtered = current.filter(id => id !== effectiveSenderId);
+        if (filtered.length > 0) reactions[emoji] = filtered;
+        else delete reactions[emoji];
+      } else {
+        reactions[emoji] = [...current, effectiveSenderId];
+      }
+      return { ...m, reactions };
+    }));
+
+    try {
+      await firebaseService.toggleMessageReaction(messageId, emoji, effectiveSenderId);
+    } catch (e) {
+      console.error('Failed to toggle reaction', e);
+    }
+  };
+
+  const scrollToQuotedMessage = (targetId?: string) => {
+    if (!targetId || !chatContainerRef.current) return;
+    const el = document.getElementById(`chat-msg-${targetId}`);
+    if (el) {
+      const container = chatContainerRef.current;
+      const elTop = el.offsetTop - container.offsetTop;
+      container.scrollTo({ top: Math.max(0, elTop - 40), behavior: 'smooth' });
+      el.classList.add('ring-2', 'ring-gold', 'ring-offset-2', 'ring-offset-zinc-950');
+      setTimeout(() => {
+        el.classList.remove('ring-2', 'ring-gold', 'ring-offset-2', 'ring-offset-zinc-950');
+      }, 2000);
     }
   };
 
@@ -232,6 +312,19 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
                 <Clock size={9} />
                 <span>24h Active</span>
               </span>
+              <button
+                type="button"
+                onClick={() => setAutoScroll(prev => !prev)}
+                className={`text-[9px] font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 transition-all cursor-pointer ${
+                  autoScroll 
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 font-semibold' 
+                    : 'bg-zinc-850/80 text-zinc-400 border-zinc-700/60 hover:text-white'
+                }`}
+                title={autoScroll ? "Auto-scroll is ON. Click to pause auto-scroll" : "Auto-scroll is OFF. Click to enable automatic scrolling"}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${autoScroll ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
+                <span>Auto-scroll: {autoScroll ? 'ON' : 'OFF'}</span>
+              </button>
             </div>
             <p className="text-[10px] text-zinc-400 truncate">
               {messages.length} {messages.length === 1 ? 'message' : 'messages'} &bull; Auto-cleans after 24 hrs
@@ -286,7 +379,7 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
       <div 
         ref={chatContainerRef}
         onScroll={handleScroll}
-        className="flex-1 p-4 overflow-y-auto space-y-3 min-h-[300px] max-h-[480px] custom-scrollbar relative"
+        className="flex-1 p-4 overflow-y-auto space-y-3.5 min-h-[300px] max-h-[480px] custom-scrollbar relative"
       >
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-zinc-500">
@@ -295,24 +388,26 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
             </div>
             <p className="text-xs font-semibold text-zinc-400">Welcome to Live Fellowship!</p>
             <p className="text-[11px] text-zinc-500 mt-1 max-w-xs">
-              Declare your praise, send your Amens, or share where you are joining from. Chats remain active for 24 hours.
+              Declare your praise, reply to brethren, react with amens, or share where you are joining from. Chats remain active for 24 hours.
             </p>
           </div>
         ) : (
           messages.map((msg) => {
             const isSelf = Boolean(
-              (msg.senderId && (msg.senderId === user?.uid || msg.senderId === chatUserId)) ||
+              (msg.senderId && msg.senderId === effectiveSenderId) ||
               (senderName && msg.senderName.trim().toLowerCase() === senderName.trim().toLowerCase())
             );
             const isMsgAdmin = msg.role === 'admin' || msg.role === 'pastor';
             const isEditingThis = editingMessageId === msg.id;
+            const isPickerOpen = activeReactionPickerId === msg.id;
 
             return (
               <motion.div
                 key={msg.id || `${msg.senderName}-${msg.createdAt}`}
+                id={`chat-msg-${msg.id}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`group flex items-start gap-2.5 text-xs ${isSelf ? 'justify-end' : 'justify-start'}`}
+                className={`group flex items-start gap-2.5 text-xs transition-all duration-300 rounded-2xl ${isSelf ? 'justify-end' : 'justify-start'}`}
               >
                 {!isSelf && (
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 border ${
@@ -350,6 +445,23 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
                       )}
                     </div>
                   </div>
+
+                  {/* Quoted Message (if this message is replying to someone) */}
+                  {msg.replyToSender && msg.replyToText && (
+                    <div 
+                      onClick={() => scrollToQuotedMessage(msg.replyToId)}
+                      className="mb-2 p-2 rounded-xl bg-zinc-950/70 border-l-2 border-gold/80 text-[11px] cursor-pointer hover:bg-zinc-950 transition-colors group/quote"
+                      title="Click to jump to quoted message"
+                    >
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-gold/90 mb-0.5">
+                        <Reply size={10} className="text-gold" />
+                        <span>{msg.replyToSender}</span>
+                      </div>
+                      <p className="text-zinc-300 truncate text-[11px] italic font-light">
+                        "{msg.replyToText}"
+                      </p>
+                    </div>
+                  )}
 
                   {/* Message Body or Inline Editor */}
                   {isEditingThis ? (
@@ -395,31 +507,118 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
                     </p>
                   )}
 
-                  {/* Action Controls for Author (Edit & Delete) or Admin (Delete) */}
-                  {!isEditingThis && (isSelf || isAdmin) && (
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-2 -right-2 flex items-center gap-1 z-10">
+                  {/* Active Reactions Pills under message */}
+                  {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-1 border-t border-zinc-800/40">
+                      {Object.entries(msg.reactions).map(([emoji, userIds]) => {
+                        if (!userIds || userIds.length === 0) return null;
+                        const hasReacted = userIds.includes(effectiveSenderId);
+                        return (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => handleReaction(msg.id!, emoji)}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer border ${
+                              hasReacted
+                                ? 'bg-amber-500/20 text-gold border-amber-500/40 shadow-sm scale-105'
+                                : 'bg-zinc-950/80 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+                            }`}
+                            title={`${userIds.length} ${userIds.length === 1 ? 'reaction' : 'reactions'} (Click to ${hasReacted ? 'remove' : 'add'})`}
+                          >
+                            <span>{emoji}</span>
+                            <span className="text-[10px]">{userIds.length}</span>
+                          </button>
+                        );
+                      })}
+
+                      {/* Quick Add Reaction Button */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveReactionPickerId(isPickerOpen ? null : msg.id!)}
+                        className="p-1 rounded-full bg-zinc-950/60 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-gold transition-colors text-[10px]"
+                        title="Add reaction"
+                      >
+                        <Plus size={10} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Message Action Bar (Reaction, Reply, Edit, Delete) */}
+                  {!isEditingThis && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-3.5 right-2 flex items-center gap-1 z-20 bg-zinc-950/95 border border-zinc-800 rounded-full px-1.5 py-0.5 shadow-xl backdrop-blur-md">
+                      {/* Emoji Reaction Trigger */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveReactionPickerId(isPickerOpen ? null : msg.id!)}
+                        className="p-1 rounded-full hover:bg-zinc-850 text-zinc-400 hover:text-gold transition-colors cursor-pointer"
+                        title="React with emoji"
+                        aria-label="React with emoji"
+                      >
+                        <Smile size={12} />
+                      </button>
+
+                      {/* Reply / Quote Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleStartReply(msg)}
+                        className="p-1 rounded-full hover:bg-zinc-850 text-zinc-400 hover:text-gold transition-colors cursor-pointer"
+                        title="Reply quoting this message"
+                        aria-label="Reply to chat"
+                      >
+                        <Reply size={12} />
+                      </button>
+
+                      {/* Author Edit */}
                       {isSelf && (
                         <button
                           type="button"
                           onClick={() => handleStartEdit(msg)}
-                          className="p-1 rounded-full bg-zinc-900 border border-gold/40 text-gold hover:bg-gold hover:text-zinc-950 cursor-pointer shadow-md transition-all"
+                          className="p-1 rounded-full hover:bg-zinc-850 text-zinc-400 hover:text-gold transition-colors cursor-pointer"
                           title="Edit your chat"
                           aria-label="Edit chat"
                         >
                           <Edit2 size={11} />
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteMessage(msg.id)}
-                        className="p-1 rounded-full bg-red-950 border border-red-500/40 text-red-400 hover:text-red-200 cursor-pointer shadow-md transition-all"
-                        title={isAdmin ? "Moderate / Delete chat" : "Delete your chat"}
-                        aria-label="Delete chat"
-                      >
-                        <Trash2 size={11} />
-                      </button>
+
+                      {/* Delete (Self or Admin) */}
+                      {(isSelf || isAdmin) && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="p-1 rounded-full hover:bg-red-950 text-zinc-400 hover:text-red-400 transition-colors cursor-pointer"
+                          title={isAdmin ? "Moderate / Delete chat" : "Delete your chat"}
+                          aria-label="Delete chat"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      )}
                     </div>
                   )}
+
+                  {/* Floating Emoji Picker Popover */}
+                  <AnimatePresence>
+                    {isPickerOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                        className="absolute -top-10 left-2 z-30 flex items-center gap-1.5 bg-zinc-950/98 border border-zinc-700/80 rounded-full p-1.5 shadow-2xl backdrop-blur-xl"
+                      >
+                        {CHAT_EMOJI_REACTIONS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => handleReaction(msg.id!, emoji)}
+                            className="w-7 h-7 rounded-full hover:bg-zinc-850 flex items-center justify-center text-sm transition-transform hover:scale-125 cursor-pointer"
+                            title={`React with ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {isSelf && (
@@ -443,7 +642,7 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
                 setShowScrollBottom(false);
                 scrollToBottom('smooth');
               }}
-              className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-900/95 border border-gold/40 text-gold text-[10px] font-semibold shadow-lg hover:bg-zinc-800 transition-all cursor-pointer"
+              className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-900/95 border border-gold/40 text-gold text-[10px] font-semibold shadow-lg hover:bg-zinc-800 transition-all cursor-pointer z-20"
             >
               <span>Latest Messages</span>
               <ChevronDown size={12} />
@@ -469,15 +668,53 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
         ))}
       </div>
 
+      {/* Active Replying Quoted Preview Banner */}
+      <AnimatePresence>
+        {replyingTo && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-2 bg-zinc-900/90 border-t border-zinc-800/80 flex items-center justify-between gap-2 text-xs backdrop-blur-sm"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <Reply size={13} className="text-gold shrink-0" />
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-gold uppercase tracking-wider block">
+                  Replying to {replyingTo.senderName}
+                </span>
+                <p className="text-xs text-zinc-300 truncate max-w-xs sm:max-w-md font-light italic">
+                  "{replyingTo.message}"
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelReply}
+              className="p-1 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+              title="Cancel reply"
+              aria-label="Cancel reply"
+            >
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Chat Input Bar */}
       <div className="p-3 border-t border-zinc-800/80 bg-zinc-900/70">
         <div className="flex items-center gap-2">
           <input
+            ref={chatInputRef}
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={senderName ? `Share with fellowship as ${senderName}...` : "Type a message or prayer response..."}
+            placeholder={
+              replyingTo
+                ? `Replying to ${replyingTo.senderName}...`
+                : (senderName ? `Share with fellowship as ${senderName}...` : "Type a message or prayer response...")
+            }
             maxLength={500}
             className="flex-1 px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-full text-xs text-white placeholder:text-zinc-500 focus:border-gold/60 outline-none transition-all"
           />
@@ -493,7 +730,7 @@ export default function LiveStreamChat({ isAdmin = false, className = '', onHide
         </div>
         
         <div className="flex items-center justify-between mt-2 px-2 text-[10px] text-zinc-500">
-          <span>Press Enter to send &bull; Sustained for 24h &bull; Edit anytime</span>
+          <span>Press Enter to send &bull; Sustained for 24h &bull; React & Reply</span>
           <span>{inputText.length}/500</span>
         </div>
       </div>

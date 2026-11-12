@@ -93,10 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       localStorage.removeItem('photizo_staff_session');
+      localStorage.removeItem('photizo_admin_session');
     } catch (e) {
       console.error(e);
     }
     setStaffSession(null);
+    setFirebaseUser(null);
     try {
       await signOut(auth);
     } catch (e) {

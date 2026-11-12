@@ -119,7 +119,7 @@ const slideVariants = {
 export default function ExcerptGallery({ isAdmin }: ExcerptGalleryProps) {
   const [excerpts, setExcerpts] = useState<Excerpt[]>([]);
   const [page, setPage] = useState<[number, number]>([0, 0]); // [currentIndex, direction]
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'worship' | 'outreach'>('all');
   
   // Modals & Drawers

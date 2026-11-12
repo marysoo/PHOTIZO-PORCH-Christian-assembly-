@@ -17,7 +17,8 @@ import {
   EyeOff, 
   MessageSquareOff,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Send
 } from 'lucide-react';
 import { firebaseService, LiveStream } from '../lib/firebaseService';
 import { CONTACT_INFO } from '../constants';
@@ -544,6 +545,17 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                   <span>Facebook</span>
                   <ExternalLink size={12} />
                 </a>
+
+                <a
+                  href={CONTACT_INFO.telegram}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors"
+                >
+                  <Send size={14} className="text-[#229ED9]" />
+                  <span>Telegram</span>
+                  <ExternalLink size={12} />
+                </a>
               </div>
             </div>
 
@@ -786,6 +798,16 @@ export default function LiveStreamHero({ isAdmin }: { isAdmin: boolean }) {
                   >
                     <Facebook size={13} className="text-blue-500" />
                     <span>Church Facebook</span>
+                    <ExternalLink size={10} />
+                  </a>
+                  <a
+                    href={CONTACT_INFO.telegram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:text-sky-400 hover:border-sky-500/50 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Send size={13} className="text-[#229ED9]" />
+                    <span>Church Telegram</span>
                     <ExternalLink size={10} />
                   </a>
                 </div>

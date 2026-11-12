@@ -147,7 +147,11 @@
         "role": { "type": "string", "enum": ["member", "pastor", "admin"] },
         "senderId": { "type": "string" },
         "updatedAt": { "type": "string" },
-        "isEdited": { "type": "boolean" }
+        "isEdited": { "type": "boolean" },
+        "replyToId": { "type": "string" },
+        "replyToSender": { "type": "string" },
+        "replyToText": { "type": "string" },
+        "reactions": { "type": "object" }
       },
       "required": ["senderName", "message", "createdAt"]
     },

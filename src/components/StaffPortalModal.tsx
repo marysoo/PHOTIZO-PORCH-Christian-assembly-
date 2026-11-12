@@ -106,11 +106,19 @@ export default function StaffPortalModal({
   const handleLogout = async () => {
     setIsSubmitting(true);
     try {
+      if (onToggleEditMode && isEditMode) {
+        onToggleEditMode();
+      }
       await logout();
+      try {
+        localStorage.removeItem('photizo_staff_session');
+        localStorage.removeItem('photizo_admin_session');
+      } catch {}
       setSuccessMsg('Logged out successfully.');
       setTimeout(() => {
         setSuccessMsg(null);
-      }, 1500);
+        onClose();
+      }, 700);
     } catch (err) {
       console.error(err);
     } finally {

@@ -64,6 +64,10 @@ export interface LiveChatMessage {
   senderId?: string;
   updatedAt?: string;
   isEdited?: boolean;
+  replyToId?: string;
+  replyToSender?: string;
+  replyToText?: string;
+  reactions?: Record<string, string[]>; // emoji -> array of senderIds
 }
 
 export interface ChurchEvent {
@@ -756,6 +760,38 @@ export const firebaseService = {
       await deleteDoc(doc(db, 'liveChatMessages', messageId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
+    }
+  },
+
+  async toggleMessageReaction(messageId: string, emoji: string, senderId: string) {
+    const path = `liveChatMessages/${messageId}`;
+    try {
+      const snap = await getDoc(doc(db, 'liveChatMessages', messageId));
+      if (snap.exists()) {
+        const existing = snap.data() as LiveChatMessage;
+        const reactions: Record<string, string[]> = existing.reactions ? { ...existing.reactions } : {};
+        const currentUsers = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+        const hasReacted = currentUsers.includes(senderId);
+
+        if (hasReacted) {
+          const filtered = currentUsers.filter(id => id !== senderId);
+          if (filtered.length > 0) {
+            reactions[emoji] = filtered;
+          } else {
+            delete reactions[emoji];
+          }
+        } else {
+          reactions[emoji] = [...currentUsers, senderId];
+        }
+
+        const updated: LiveChatMessage = {
+          ...existing,
+          reactions
+        };
+        await setDoc(doc(db, 'liveChatMessages', messageId), updated);
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
     }
   },
 

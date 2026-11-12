@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, CreditCard, Landmark, Globe, CheckCircle2, Copy, Check, Info, Coins, Lock, ExternalLink, QrCode, Smartphone } from 'lucide-react';
+import { ChevronDown, CreditCard, Landmark, Globe, CheckCircle2, Copy, Check, Info, Coins, Lock, ExternalLink, QrCode, Smartphone, AlertTriangle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { GIVING_OPTIONS, BANK_DETAILS } from '../constants';
 import GivingQRCodeSection from './GivingQRCodeSection';
@@ -19,6 +19,7 @@ export default function GivingHub() {
   const [showGbpDomDetails, setShowGbpDomDetails] = useState(false);
   const [showKeystoneDomDetails, setShowKeystoneDomDetails] = useState(false);
   const [showPaypalDetails, setShowPaypalDetails] = useState(false);
+  const [paypalModalTab, setPaypalModalTab] = useState<'xoom' | 'direct'>('xoom');
 
   // Close modals on Escape key & manage body scroll lock to prevent trapped scrolls
   useEffect(() => {
@@ -435,47 +436,77 @@ export default function GivingHub() {
                     </div>
                   </div>
 
-                  {/* PayPal Transfer Card */}
-                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 via-zinc-900/70 to-zinc-950 border border-sky-500/30 hover:border-sky-400/60 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-sky-500/[0.03]">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  {/* PayPal & Xoom Transfer Card */}
+                  <div className="relative group overflow-hidden bg-gradient-to-br from-zinc-900/90 via-zinc-900/70 to-zinc-950 border border-amber-500/30 hover:border-amber-400/60 p-6 sm:p-8 rounded-3xl transition-all duration-300 shadow-xl shadow-amber-500/[0.03]">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/30 group-hover:scale-105 transition-transform text-sky-400">
-                          <CreditCard className="w-5 h-5 text-sky-400" />
+                        <div className="w-11 h-11 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/30 group-hover:scale-105 transition-transform text-amber-400">
+                          <CreditCard className="w-5 h-5 text-amber-400" />
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-sky-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-sky-400/10 border border-sky-400/20 inline-block mb-1">
-                            {BANK_DETAILS.paypal.accountType}
+                          <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20 inline-block mb-1">
+                            PayPal &amp; Xoom Giving
                           </span>
-                          <h3 className="text-lg font-serif text-white">PayPal Instant Transfer</h3>
+                          <h3 className="text-lg font-serif text-white">PayPal / Xoom Support</h3>
                         </div>
                       </div>
                       
-                      <QuickCopy value={BANK_DETAILS.paypal.email} />
+                      <QuickCopy value={BANK_DETAILS.paypal.xoom.accountNumber} />
                     </div>
 
-                    <p className="text-xs text-zinc-400 mb-5 leading-relaxed">{BANK_DETAILS.paypal.description}</p>
-
-                    <div className="space-y-4 font-sans border-t border-zinc-800/50 pt-5">
-                      <div>
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-0.5">Recipient PayPal Email</span>
-                        <p className="font-mono text-sm text-sky-300 font-semibold truncate selection:bg-sky-500/30">{BANK_DETAILS.paypal.email}</p>
+                    {/* Notice for PayPal */}
+                    <div className="mb-4 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left">
+                      <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs mb-1">
+                        <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                        <span className="uppercase tracking-wider text-[11px]">Notice: PayPal Under Review</span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-zinc-950/60 p-3 rounded-xl border border-sky-500/20">
+                      <p className="text-[11px] text-amber-200/90 leading-relaxed mb-2.5">
+                        Our PayPal account is still under review. However, you can still send your ministry support from the USA to Nigeria using <strong className="text-white font-medium">PayPal Xoom</strong>.
+                      </p>
+                      <button
+                        onClick={() => setShowPaypalDetails(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-semibold transition-all cursor-pointer"
+                      >
+                        <Info size={13} />
+                        <span>View 8-Step PayPal Xoom Guide &rarr;</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-3 font-sans border-t border-zinc-800/50 pt-4">
+                      <div className="bg-zinc-950/70 p-3 rounded-xl border border-zinc-800/80">
+                        <span className="text-[9px] text-amber-400 font-bold uppercase tracking-widest block mb-1">Xoom Direct Recipient Details</span>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-zinc-500 block">Bank Name</span>
+                            <span className="text-white font-medium">Fidelity Bank</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-zinc-500 block">Account Number</span>
+                            <span className="font-mono text-amber-300 font-bold tracking-wider">6977216553</span>
+                          </div>
+                          <div className="col-span-2 border-t border-zinc-900 pt-1.5">
+                            <span className="text-[10px] text-zinc-500 block">Beneficiary Name</span>
+                            <span className="text-zinc-200 font-medium">Japheth Mbalumunga Tsukwas</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-1">
                         <a 
-                          href="https://www.paypal.com/signin"
+                          href="https://www.xoom.com/nigeria/send-money"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3.5 py-2 bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/30 text-sky-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                          className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
                         >
-                          <ExternalLink size={14} className="text-sky-400" />
-                          Open PayPal
+                          <ExternalLink size={14} />
+                          Open PayPal Xoom
                         </a>
                         <button 
                           onClick={() => setShowPaypalDetails(true)}
-                          className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap cursor-pointer"
+                          className="px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 hover:border-amber-400/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap cursor-pointer"
                         >
-                          <Info size={14} className="text-sky-400" />
-                          View Info
+                          <Info size={14} className="text-amber-400" />
+                          View Full Instructions
                         </button>
                       </div>
                     </div>
@@ -930,7 +961,7 @@ export default function GivingHub() {
         )}
       </AnimatePresence>
 
-      {/* PayPal Details Modal */}
+      {/* PayPal & Xoom Details Modal */}
       <AnimatePresence>
         {showPaypalDetails && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
@@ -942,82 +973,333 @@ export default function GivingHub() {
               className="fixed inset-0 bg-black/85 backdrop-blur-sm z-40" 
             />
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-50 my-auto"
+              className="relative w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-3xl p-5 sm:p-8 shadow-2xl z-50 my-auto max-h-[90vh] overflow-y-auto text-left"
             >
-              <div className="flex items-center justify-between mb-6">
+              {/* Modal Header */}
+              <div className="flex items-start justify-between gap-4 mb-5 border-b border-zinc-800/80 pb-4">
                 <div>
-                  <span className="text-[10px] font-bold text-sky-400 tracking-wider uppercase px-2.5 py-1 rounded-full bg-sky-400/10 border border-sky-400/20 inline-block mb-1">
-                    {BANK_DETAILS.paypal.accountType}
-                  </span>
-                  <h3 className="text-2xl font-serif text-white">PayPal Transfer Details</h3>
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/30 inline-flex items-center gap-1">
+                      <AlertTriangle size={11} />
+                      Account Notice: Under Review
+                    </span>
+                    <span className="text-[10px] font-bold text-sky-400 tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-400/10 border border-sky-400/20">
+                      USA to Nigeria Guide
+                    </span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-serif text-white">PayPal &amp; Xoom Ministry Support</h3>
                 </div>
                 <button 
                   onClick={() => setShowPaypalDetails(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors shrink-0 cursor-pointer"
+                  aria-label="Close modal"
                 >
                   &times;
                 </button>
               </div>
-              
-              <div className="space-y-1 mb-6">
-                <DetailRow label="PayPal Recipient Email" value={BANK_DETAILS.paypal.email} />
-                <DetailRow label="Beneficiary / Account" value={BANK_DETAILS.paypal.accountName} />
-                <DetailRow label="Selected Category" value={selectedType ? GIVING_OPTIONS.find(o => o.id === selectedType)?.label || 'Seed / Offering' : 'General Ministry Giving'} />
-                <DetailRow label="Channel Description" value={BANK_DETAILS.paypal.description} />
-              </div>
 
-              {/* Transfer Memo Instructions */}
-              <div className="mb-6 p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex gap-3 text-left">
-                <Info className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-sky-400 uppercase tracking-wider mb-1">PayPal Transfer Note</h4>
-                  <p className="text-xs text-zinc-300 leading-relaxed">
-                    When sending funds via PayPal, kindly include your name and giving category (e.g. <span className="text-white font-medium">Tithe, Offering, Seed, or Ministry Gift</span>) in the transfer note.
-                  </p>
-                </div>
-              </div>
-
-              {/* Scannable PayPal QR code snippet */}
-              <div className="flex items-center gap-4 bg-zinc-900/80 border border-sky-500/30 p-3.5 rounded-2xl mb-6">
-                <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
-                  <QRCodeSVG 
-                    value={`https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=${encodeURIComponent(BANK_DETAILS.paypal.email)}&item_name=${encodeURIComponent('Kingdom Giving - Photizo Porch')}`}
-                    size={72} 
-                    level="M" 
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-sky-400 font-semibold text-xs mb-0.5">
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>Scan to Open PayPal</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 leading-snug">
-                    Camera scan opens PayPal giving directly on your mobile device for <strong className="text-white">{BANK_DETAILS.paypal.email}</strong>.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <a
-                  href="https://www.paypal.com/signin"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-3.5 px-4 bg-sky-500 hover:bg-sky-400 text-zinc-950 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-sm"
+              {/* View Selector Tabs */}
+              <div className="flex items-center gap-2 p-1 bg-zinc-900/90 rounded-2xl border border-zinc-800/80 mb-6">
+                <button
+                  onClick={() => setPaypalModalTab('xoom')}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    paypalModalTab === 'xoom'
+                      ? 'bg-amber-400 text-zinc-950 shadow-md font-bold'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                  }`}
                 >
-                  <ExternalLink size={16} />
-                  Open PayPal
-                </a>
-                <button 
-                  onClick={() => setShowPaypalDetails(false)}
-                  className="py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-semibold rounded-xl border border-zinc-800 transition-all text-sm"
+                  <Globe size={13} />
+                  <span>PayPal Xoom Guide (8 Steps)</span>
+                </button>
+                <button
+                  onClick={() => setPaypalModalTab('direct')}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    paypalModalTab === 'direct'
+                      ? 'bg-sky-500 text-zinc-950 shadow-md font-bold'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                  }`}
                 >
-                  Close Details
+                  <CreditCard size={13} />
+                  <span>Direct PayPal Details</span>
                 </button>
               </div>
+
+              {paypalModalTab === 'xoom' ? (
+                <div className="space-y-6">
+                  {/* Urgent Review Notice Banner */}
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/35">
+                    <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider mb-1.5">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                      <span>Important Notice for PayPal Donors</span>
+                    </div>
+                    <p className="text-xs text-amber-200/95 leading-relaxed font-medium">
+                      Our PayPal account is still under review. However, you can still follow below via PayPal: <span className="text-white font-bold underline decoration-amber-400">HOW TO SEND MINISTRY SUPPORT FROM THE USA TO NIGERIA USING PAYPAL XOOM</span>.
+                    </p>
+                  </div>
+
+                  {/* Introduction Card */}
+                  <div className="p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800/80 text-zinc-300 text-xs leading-relaxed space-y-2">
+                    <p className="text-amber-300 font-medium">
+                      Thank you for your willingness to support the work of God.
+                    </p>
+                    <p>
+                      You can potentially send your ministry donation from the United States to Nigeria using <strong className="text-white">Xoom</strong>, a money-transfer service owned by PayPal.
+                    </p>
+                    <p className="text-zinc-400">
+                      Please follow these simple steps below:
+                    </p>
+                  </div>
+
+                  {/* 8 Step-by-Step Guide */}
+                  <div className="space-y-4">
+                    {/* STEP 1 */}
+                    <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-amber-400/30 transition-colors">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20">
+                          STEP 1: Visit Xoom
+                        </span>
+                        <a
+                          href="https://www.xoom.com/nigeria/send-money"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-semibold text-amber-300 hover:text-white flex items-center gap-1 transition-colors"
+                        >
+                          <ExternalLink size={12} />
+                          Open Link
+                        </a>
+                      </div>
+                      <p className="text-xs text-zinc-300 mb-2">Open the official website:</p>
+                      <a
+                        href="https://www.xoom.com/nigeria/send-money"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs text-sky-400 hover:text-sky-300 underline break-all font-medium inline-block bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 w-full"
+                      >
+                        https://www.xoom.com/nigeria/send-money
+                      </a>
+                    </div>
+
+                    {/* STEP 2 */}
+                    <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20 inline-block mb-2">
+                        STEP 2: Log in
+                      </span>
+                      <ul className="text-xs text-zinc-300 space-y-1.5 list-disc list-inside">
+                        <li>Click <strong className="text-white">Log In</strong>.</li>
+                        <li>Sign in using your <strong className="text-white">US PayPal account</strong> if that option is available.</li>
+                        <li>Complete any security verification requested.</li>
+                      </ul>
+                    </div>
+
+                    {/* STEP 3 */}
+                    <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20 inline-block mb-2">
+                        STEP 3: Select Nigeria
+                      </span>
+                      <ul className="text-xs text-zinc-300 space-y-1.5 list-disc list-inside">
+                        <li>Choose <strong className="text-white">Nigeria</strong> as the receiving country.</li>
+                        <li>Enter the amount you wish to send in US dollars ($).</li>
+                        <li>Check the displayed exchange rate to Nigerian naira (₦).</li>
+                      </ul>
+                    </div>
+
+                    {/* STEP 4 */}
+                    <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20 inline-block mb-2">
+                        STEP 4: Select Bank Deposit
+                      </span>
+                      <ul className="text-xs text-zinc-300 space-y-1.5 list-disc list-inside">
+                        <li>Choose <strong className="text-white">Bank Deposit</strong> as the receiving method.</li>
+                        <li>Select <strong className="text-white font-semibold">Fidelity Bank</strong> from the list of available banks.</li>
+                      </ul>
+                    </div>
+
+                    {/* STEP 5 - HIGHLIGHTED BANK DETAILS */}
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-950/40 via-zinc-900/90 to-zinc-950 border-2 border-amber-400/50 shadow-xl shadow-amber-500/10">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                        <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-400/20 border border-amber-400/40 inline-block">
+                          STEP 5: Enter the Recipient's Bank Details
+                        </span>
+                        <QuickCopy value="6977216553" />
+                      </div>
+                      <p className="text-xs text-zinc-300 mb-3">Please enter the following information into Xoom:</p>
+                      
+                      <div className="bg-zinc-950/90 rounded-xl p-3.5 border border-zinc-800 space-y-2.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Bank Name</span>
+                          <span className="text-white font-bold text-sm">Fidelity Bank</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs border-t border-zinc-900 pt-2">
+                          <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Account Name</span>
+                          <span className="text-zinc-100 font-semibold text-xs text-right">Japheth Mbalumunga Tsukwas</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs border-t border-zinc-900 pt-2">
+                          <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Account Number</span>
+                          <span className="font-mono text-base font-bold text-amber-300 tracking-wider">6977216553</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs border-t border-zinc-900 pt-2">
+                          <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Country</span>
+                          <span className="text-white font-semibold">Nigeria</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* STEP 6 */}
+                    <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20 inline-block mb-2">
+                        STEP 6: Select Your Payment Method
+                      </span>
+                      <p className="text-xs text-zinc-300 mb-2">
+                        Choose an eligible payment method available on your Xoom account, such as:
+                      </p>
+                      <ul className="text-xs text-zinc-300 space-y-1.5 list-disc list-inside">
+                        <li><strong className="text-white">PayPal balance</strong></li>
+                        <li><strong className="text-white">Linked US bank account</strong></li>
+                        <li><strong className="text-white">Eligible debit card</strong></li>
+                      </ul>
+                    </div>
+
+                    {/* STEP 7 */}
+                    <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20 inline-block mb-2">
+                        STEP 7: Review the Transaction
+                      </span>
+                      <p className="text-xs text-zinc-300 mb-2">Before proceeding, carefully check:</p>
+                      <ul className="text-xs text-zinc-300 space-y-1 list-disc list-inside mb-3">
+                        <li>Recipient's full name (<strong className="text-white">Japheth Mbalumunga Tsukwas</strong>)</li>
+                        <li>Account number (<strong className="text-amber-300">6977216553</strong>)</li>
+                        <li>Bank name (<strong className="text-white">Fidelity Bank</strong>)</li>
+                        <li>Amount being sent</li>
+                        <li>Exchange rate</li>
+                        <li>Transfer fees</li>
+                        <li>Final amount to be received in naira</li>
+                      </ul>
+                      
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex gap-2.5">
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-amber-200/95 leading-relaxed font-medium">
+                          <strong className="text-amber-300 font-bold">IMPORTANT:</strong> Since this money is intended as voluntary ministry support, please confirm that Xoom permits this type of donation to a personal Nigerian bank account.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* STEP 8 */}
+                    <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20 inline-block mb-2">
+                        STEP 8: Confirm and Send
+                      </span>
+                      <p className="text-xs text-zinc-300 mb-2">If Xoom accepts the transaction:</p>
+                      <ul className="text-xs text-zinc-300 space-y-1.5 list-disc list-inside">
+                        <li>Click <strong className="text-white">Send</strong>.</li>
+                        <li>Complete the required security verification.</li>
+                        <li>Save your transaction receipt.</li>
+                        <li><strong className="text-amber-300">Kindly share the transaction confirmation with us.</strong></li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Closing Blessing */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-amber-500/20 text-center space-y-1.5">
+                    <p className="text-xs font-serif text-amber-200/90 leading-relaxed italic">
+                      "Thank you for your generosity and partnership in supporting the Gospel of Jesus Christ. May God richly bless you!"
+                    </p>
+                    <h5 className="text-xs font-bold text-white uppercase tracking-widest pt-1">
+                      PHOTIZO PORCH CHRISTIAN ASSEMBLY
+                    </h5>
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-wider">Nigeria</p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <a
+                      href="https://www.xoom.com/nigeria/send-money"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-3.5 px-4 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-xs uppercase tracking-wider"
+                    >
+                      <ExternalLink size={15} />
+                      Open Xoom (send-money)
+                    </a>
+                    <button 
+                      onClick={() => setShowPaypalDetails(false)}
+                      className="py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-semibold rounded-xl border border-zinc-800 transition-all text-xs"
+                    >
+                      Close Guide
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Direct PayPal Tab */
+                <div className="space-y-5">
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="text-xs text-amber-200/90 leading-relaxed">
+                      <strong className="text-amber-300 font-semibold block mb-0.5">Direct PayPal Notice</strong>
+                      Our direct PayPal account is still under review. We recommend using <strong className="text-white">PayPal Xoom</strong> for seamless USA-to-Nigeria giving.
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <DetailRow label="PayPal Recipient Email" value={BANK_DETAILS.paypal.email} />
+                    <DetailRow label="Beneficiary / Account" value={BANK_DETAILS.paypal.accountName} />
+                    <DetailRow label="Selected Category" value={selectedType ? GIVING_OPTIONS.find(o => o.id === selectedType)?.label || 'Seed / Offering' : 'General Ministry Giving'} />
+                    <DetailRow label="Channel Description" value={BANK_DETAILS.paypal.description} />
+                  </div>
+
+                  {/* Transfer Note */}
+                  <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex gap-3 text-left">
+                    <Info className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-sky-400 uppercase tracking-wider mb-1">PayPal Transfer Note</h4>
+                      <p className="text-xs text-zinc-300 leading-relaxed">
+                        When sending funds via PayPal, kindly include your name and giving category (e.g. <span className="text-white font-medium">Tithe, Offering, Seed, or Ministry Gift</span>) in the transfer note.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Scannable PayPal QR code snippet */}
+                  <div className="flex items-center gap-4 bg-zinc-900/80 border border-sky-500/30 p-3.5 rounded-2xl">
+                    <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
+                      <QRCodeSVG 
+                        value={`https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=${encodeURIComponent(BANK_DETAILS.paypal.email)}&item_name=${encodeURIComponent('Kingdom Giving - Photizo Porch')}`}
+                        size={72} 
+                        level="M" 
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 text-sky-400 font-semibold text-xs mb-0.5">
+                        <QrCode className="w-3.5 h-3.5" />
+                        <span>Scan to Open PayPal</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-snug">
+                        Camera scan opens PayPal giving directly on your mobile device for <strong className="text-white">{BANK_DETAILS.paypal.email}</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <a
+                      href="https://www.paypal.com/signin"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-3.5 px-4 bg-sky-500 hover:bg-sky-400 text-zinc-950 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-xs uppercase tracking-wider"
+                    >
+                      <ExternalLink size={15} />
+                      Open PayPal
+                    </a>
+                    <button 
+                      onClick={() => setPaypalModalTab('xoom')}
+                      className="py-3.5 px-4 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/30 font-semibold rounded-xl transition-all text-xs"
+                    >
+                      View Xoom Guide &rarr;
+                    </button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
         )}

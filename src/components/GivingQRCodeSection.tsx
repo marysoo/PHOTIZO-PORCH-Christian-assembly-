@@ -75,17 +75,17 @@ export default function GivingQRCodeSection() {
     {
       id: 'paypal-global',
       category: 'international',
-      title: 'PayPal • Instant Global Giving',
-      bankName: 'PayPal Worldwide',
-      accountType: 'Online / Card / PayPal',
-      badge: 'Global Instant',
-      badgeColor: 'border-sky-400/30 text-sky-400 bg-sky-400/10',
-      accountNumber: BANK_DETAILS.paypal.email,
-      accountName: BANK_DETAILS.paypal.accountName,
-      currency: 'USD, EUR, GBP, CAD & Global',
-      qrPayload: `https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=${encodeURIComponent(BANK_DETAILS.paypal.email)}&item_name=${encodeURIComponent('Kingdom Giving - Photizo Porch Christian Assembly')}`,
-      description: 'Point your camera to open PayPal checkout directly on your smartphone.',
-      directUrl: 'https://www.paypal.com/signin'
+      title: 'PayPal & Xoom • International Giving',
+      bankName: 'PayPal Xoom (Fidelity Bank)',
+      accountType: 'Online / Card / PayPal Xoom',
+      badge: 'Under Review • Use Xoom',
+      badgeColor: 'border-amber-400/30 text-amber-300 bg-amber-400/10',
+      accountNumber: '6977216553 (Fidelity Bank)',
+      accountName: 'Japheth Mbalumunga Tsukwas',
+      currency: 'USD & Global currencies via Xoom',
+      qrPayload: 'https://www.xoom.com/nigeria/send-money',
+      description: 'PayPal account is currently under review. USA and global partners can send directly to Fidelity Bank via PayPal Xoom.',
+      directUrl: 'https://www.xoom.com/nigeria/send-money'
     },
     {
       id: 'zenith-usd-dom',
